@@ -10,6 +10,7 @@ int main(){
     lac.training("datasets/poker-hand-training.data");
 
     //teste
+    lac.testing("datasets/poker-hand-testing.data");
 
 
     return 0;

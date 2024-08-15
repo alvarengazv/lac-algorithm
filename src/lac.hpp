@@ -5,8 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include <fstream>
-#include <string>
-#include "tokenizer.hpp"
+#include <string> 
 
 using namespace std;
 
@@ -26,13 +25,14 @@ class Lac{
         Lac(unordered_map<pair<int, int>, vector<int>, pairHash> features, unordered_map<int, vector<int>> classes);
         void readFile(string path);
         void training(string path);
-        void testing();
+        void testing(string path);
+        int intersection(vector<int> first, vector<int>second);
+        vector<int> intersectionAll(vector<vector<int>> list);
+        int findMaxIndex(float* arr, int size);
         vector<int> splitString(string line);
         unordered_map<pair<int, int>, vector<int>, pairHash> getFeatures();
         unordered_map<int, vector<int>> getClasses();
         
-
-
 };
 
 #endif
