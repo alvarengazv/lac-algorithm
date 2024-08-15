@@ -10,8 +10,13 @@ int main(){
     lac.training("datasets/poker-hand-training.data");
 
     //teste
+    auto start = chrono::high_resolution_clock::now();
+
     lac.testing("datasets/poker-hand-testing.data");
 
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+    cout << "Tempo de execução: " << duration.count() / 60000 << " minutos, " << (duration.count() % 60000) / 1000 << " segundos e " << (duration.count() % 60000) % 1000 << " milissegundos" << endl;
 
     return 0;
 }

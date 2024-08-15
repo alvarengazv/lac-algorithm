@@ -51,10 +51,9 @@ void Lac::training(string path) {
     }
 
     // Imprimindo as classes
-
     // for (auto v : classes)
     // {
-    //     cout << "Classe:" << v.first << " >>>>> ";
+    //     cout << "Classe: " << v.first << " >>>>> ";
     //     for (auto i : v.second)
     //     {
     //         cout << i << " ";
@@ -73,7 +72,7 @@ void Lac::testing(string path) {
 
     string line;
     int j = 1, erros = 0, acertos = 0;
-
+    
     while (getline(file, line)) {
         float* result = (float*)malloc(sizeof(float) * classes.size());
         vector<int> values = splitString(line);
@@ -94,20 +93,20 @@ void Lac::testing(string path) {
 
         // guardando as linhas referentes as tuplas da linha
         vector<vector<int>> linesPerTupla = {};
-        for (int i = 0; i < n; i++) {
-            pair<int, int> key = pair(lineFeatures[n].first, lineFeatures[n].second);
+        for (int p = 0; p < n; p++) {
+            pair<int, int> key = pair(lineFeatures[p].first, lineFeatures[p].second);
             linesPerTupla.push_back(features[key]);
         }
-
+        
         // Acessando as linhas de cada tupla: 1 a 1, 2 a 2 e assim
         // por diante ate o tamanho maximo da tupla, 11.
-        for (int i = 1; i <= n; i++) {
-            for (int j = 0; j < n; j += i) {
+        for (int q = 1; q <= n; q++) {
+            for (int r = 0; r < n; r += q) {
                 // vector para guardar as combinacoes 1 a 1, 2 a 2.....
                 vector<vector<int>> combinacoes = {};
-                int end = min(j + i, n);
+                int end = min(r + q, n);
 
-                for (int k = j; k < end; ++k) {
+                for (int k = r; k < end; ++k) {
                     combinacoes.push_back(linesPerTupla[k]);
                 }
 
@@ -132,15 +131,16 @@ void Lac::testing(string path) {
 
         int classification = findMaxIndex(result, classes.size());
 
-        // cout << "Classificação: " << classification << endl;
+        cout << "Classificação: " << classification << endl;
 
-        if (classification == values.back()) {
+        if (classification == values.back()) 
             acertos++;
-        } else {
+        else
             erros++;
-        }
     }
+
     cout << "Acertos: " << acertos << " Erros: " << erros << endl;
+    
     // Porcentagem de acertos
     cout << "Porcentagem de acertos: " << (acertos * 100) / (acertos + erros) << "%" << endl;
 
