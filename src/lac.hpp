@@ -19,20 +19,26 @@ struct pairHash {
 
 class Lac{
     private:
+        // unordered_map<pair<int, float>, vector<int>, pairHash> features;
         unordered_map<pair<int, int>, vector<int>, pairHash> features;
         unordered_map<int, vector<int>> classes;
 
     public:
+        // Lac(unordered_map<pair<int, float>, vector<int>, pairHash> features, unordered_map<int, vector<int>> classes);
         Lac(unordered_map<pair<int, int>, vector<int>, pairHash> features, unordered_map<int, vector<int>> classes);
         void readFile(string path);
         void training(string path);
         void testing(string path);
         int intersection(vector<int> first, vector<int>second);
         vector<int> intersectionAll(vector<vector<int>> list);
-        int findMaxIndex(float* arr, int size);
+        int findMaxIndex(double* arr, int size);
+        // vector<float> splitString(string line);
         vector<int> splitString(string line);
         unordered_map<pair<int, int>, vector<int>, pairHash> getFeatures();
+        // unordered_map<pair<int, float>, vector<int>, pairHash> getFeatures();
         unordered_map<int, vector<int>> getClasses();
+        void imprimirFeatures();
+        void imprimirClasses();
         
 };
 

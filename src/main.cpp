@@ -7,12 +7,14 @@ int main(){
     Lac lac = Lac(features, classes);
 
     //treino
+    // lac.training("datasets/iris.data");
     lac.training("datasets/poker-hand-training.data");
 
     //teste
     auto start = chrono::high_resolution_clock::now();
 
     lac.testing("datasets/poker-hand-testing.data");
+    // lac.testing("datasets/iris-training.data");
 
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
