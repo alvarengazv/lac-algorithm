@@ -1,11 +1,6 @@
 #include "lac.hpp"
 
-#include <unordered_set>
-
-#define MIN_SUPORTE 0
-
-Lac::Lac(unordered_map<pair<int, int>, vector<int>, pairHash> features, unordered_map<int, vector<int>> classes) {
-// Lac::Lac(unordered_map<pair<int, float>, vector<int>, pairHash> features, unordered_map<int, vector<int>> classes) {
+Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes) {
     this->features = features;
     this->classes = classes;
 }
@@ -32,23 +27,22 @@ void Lac::training(string path) {
             pair<int, int> feature(++i, v);
 
             if (features.find(feature) != features.end()) {
-                features[feature].push_back(j);
+                features[feature].insert(j);
             } else {
-                vector<int> lines;
-                lines.push_back(j);
-                // features.insert(pair<pair<int, float>, vector<int>>(feature, lines));
-                features.insert(pair<pair<int, int>, vector<int>>(feature, lines));
+                unordered_set<int> lines;
+                lines.insert(j);
+                features.insert(pair<pair<int, int>, unordered_set<int>>(feature, lines));
             }
             if (i == values.size() - 1)
                 break;
         }
 
         if (classes.find(values.back()) != classes.end()) {
-            classes[values.back()].push_back(j);
+            classes[values.back()].insert(j);
         } else {
-            vector<int> lines;
-            lines.push_back(j);
-            classes.insert(pair<int, vector<int>>(values.back(), lines));
+            unordered_set<int> lines;
+            lines.insert(j);
+            classes.insert(pair<int, unordered_set<int>>(values.back(), lines));
         }
 
         j++;
@@ -74,10 +68,6 @@ void Lac::testing(string path) {
 
     while (getline(file, line)) {
         double result[classes.size()] = {0};
-        
-        for(int i = 0; i < classes.size(); i++){
-            result[i] = 0;
-        }
 
         // vector<float> values = splitString(line);
         vector<int> values = splitString(line);
@@ -86,7 +76,7 @@ void Lac::testing(string path) {
 
         int i = 0;
         for (auto v : values) {
-            pair<int, float> feature(++i, v);
+            pair<int, int> feature(++i, v);
 
             if (features.find(feature) != features.end())
                 lineFeatures.push_back(feature);
@@ -98,44 +88,56 @@ void Lac::testing(string path) {
 
         int n = lineFeatures.size();
 
-        // guardando as linhas referentes as tuplas da linha
-        vector<vector<int>> linesPerTupla = {};
-        for (int p = 0; p < n; p++) {
-            // pair<int, float> key = pair(lineFeatures[p].first, lineFeatures[p].second);
-            pair<int, int> key = pair(lineFeatures[p].first, lineFeatures[p].second);
-            linesPerTupla.push_back(features[key]);
-        }
+        int qtdIntersecao = -1;
+        vector<unordered_set<pair<int, int>, pairHash>> combinacoesFeatures = {};
 
         // Acessando as linhas de cada tupla: 1 a 1, 2 a 2 e assim
-        // por diante ate o tamanho maximo da tupla, 11
+        // por diante ate o tamanho maximo da tupla, 11.
+        bool shouldStop = false;
         for (int q = 1; q <= n; q++) {
-            for (int r = 0; r < n; r += q) {
-                // vector para guardar as combinacoes 1 a 1, 2 a 2.....
-                vector<vector<int>> combinacoes = {};
-                int end = min(r + q, n);
+            if (shouldStop)
+                break;
+            combinacoesFeatures = combo(lineFeatures, q);
+            for (int r = 0; r < combinacoesFeatures.size(); r++) {
+                // vector para guardar as combinacoes das linhas das features, 1 a 1, 2 a 2.....
+                vector<unordered_set<int>> combinacoesLinhas = {};
 
-                for (int k = r; k < end; ++k) {
-                    combinacoes.push_back(linesPerTupla[k]);
+                for (auto c : combinacoesFeatures[r]) {
+                    // pair<int, float> key = pair(c.first, c.second);
+                    pair<int, int> key = pair(c.first, c.second);
+                    combinacoesLinhas.push_back(features[key]);
                 }
 
                 // fazendo a interseção das combinacoes 1 a 1, 2 a 2.....
-                vector<int> intersectionPerTupla = intersectionAll(combinacoes);
+                unordered_set<int> intersectionPerTupla = intersectionAll(combinacoesLinhas);
+
+                qtdIntersecao = intersectionPerTupla.size();
+
+                if (qtdIntersecao <= INTERSECTION_LIMIT) {
+                    shouldStop = true;
+                    continue;
+                }
+
+                // cout << "Tamanho da intersecao: " << qtdIntersecao << endl;
 
                 for (auto c : classes) {
-                    // cout << endl << "testedadlasdasd classe: " << c.first << endl;
-                    // int confident  = intersection(intersectionPerTupla, c.second);
-                    vector<int> intersecao;
-                    set_intersection(intersectionPerTupla.begin(), intersectionPerTupla.end(), c.second.begin(), c.second.end(), back_inserter(intersecao));
+                    unordered_set<int> intersecao;
+                    for (const auto &elem : intersectionPerTupla) {
+                        if (c.second.find(elem) != c.second.end()) {
+                            intersecao.insert(elem);
+                        }
+                    }
                     int confident = intersecao.size();
 
                     if (confident > MIN_SUPORTE) {
-                        double support = (double) confident / (double)features.size();
+                        double support = (double)confident / (double)features.size();
                         result[c.first] += support;
                     }
                 }
             }
         }
 
+        cout << "j: " << j << endl;
         j++;
 
         int classification = findMaxIndex(result, classes.size());
@@ -180,57 +182,40 @@ vector<int> Lac::splitString(string line) {
 
 // gets
 
-// unordered_map<pair<int, float>, vector<int>, pairHash> Lac::getFeatures() {
-unordered_map<pair<int, int>, vector<int>, pairHash> Lac::getFeatures() {
+unordered_map<pair<int, int>, unordered_set<int>, pairHash> Lac::getFeatures() {
     return features;
 }
 
-unordered_map<int, vector<int>> Lac::getClasses() {
+unordered_map<int, unordered_set<int>> Lac::getClasses() {
     return classes;
 }
 
-// interseção entre uma lista de vector
-vector<int> Lac::intersectionAll(vector<std::vector<int>> lists) {
-    unordered_map<int, int> freqMap;
-    int numLists = lists.size();
+// interseção entre uma lista de unordered_set
+unordered_set<int> Lac::intersectionAll(vector<unordered_set<int>> lists) {
+    if (lists.empty())
+        return {};
 
-    // Contabiliza a frequência de cada elemento em todas as sublistas
-    for (const auto &list : lists) {
-        unordered_map<int, bool> visited;
-        for (auto num : list) {
-            // Evita contar o mesmo número mais de uma vez por sublista
-            if (!visited[num]) {
-                freqMap[num]++;
-                visited[num] = true;
+    unordered_set<int> result = lists[0];
+    for (size_t i = 1; i < lists.size(); ++i) {
+        unordered_set<int> temp;
+        for (const auto &elem : result) {
+            if (lists[i].find(elem) != lists[i].end()) {
+                temp.insert(elem);
             }
         }
+        result = temp;
     }
-
-    vector<int> result;
-    // Adiciona ao resultado apenas os elementos que aparecem em todas as sublistas
-    for (const auto &pair : freqMap) {
-        if (pair.second == numLists) {
-            result.push_back(pair.first);
-        }
-    }
-
     return result;
 }
 
-// interseção entre dois vector
-int Lac::intersection(vector<int> first, vector<int> second) {
-    std::vector<int> intersection;
-
-    // Armazena os elementos do primeiro vetor em um unordered_set
-    std::unordered_set<int> set1(first.begin(), first.end());
-
-    // Verifica quais elementos do segundo vetor estão presentes no set1
-    for (int num : second) {
-        if (set1.find(num) != set1.end()) {
-            intersection.push_back(num);
+// interseção entre dois unordered_set
+int Lac::intersection(unordered_set<int> first, unordered_set<int> second) {
+    unordered_set<int> intersection;
+    for (const auto &elem : first) {
+        if (second.find(elem) != second.end()) {
+            intersection.insert(elem);
         }
     }
-
     return intersection.size();
 }
 
@@ -240,13 +225,12 @@ int Lac::findMaxIndex(double *arr, int size) {
     double maxValue = arr[0];
 
     for (int i = 1; i < size; ++i) {
-        // cout <<arr[i]<<",";
+        // cout << "Classe: " << i << " Valor: " << arr[i] << endl;
         if (arr[i] > maxValue) {
             maxValue = arr[i];
             maxIndex = i;
         }
     }
-    // cout<<endl;
 
     return maxIndex;
 }
@@ -269,4 +253,45 @@ void Lac::imprimirClasses() {
         }
         cout << endl;
     }
+}
+
+// void Lac::pretty_print(const vector<pair<int, float>> &c, int combo) {
+void Lac::pretty_print(const vector<pair<int, int>> &c, int combo) {
+    int n = c.size();
+    for (int i = 0; i < n; i++) {
+        if ((combo >> i) & 1)
+            cout << "(" << c[i].first << ", " << c[i].second << ") ";
+    }
+    cout << endl;
+}
+
+// vector<vector<pair<int, float>>> Lac::combo(const vector<pair<int, float>> &c, int k) {
+vector<unordered_set<pair<int, int>, pairHash>> Lac::combo(const vector<pair<int, int>> &c, int k) {
+    int n = c.size();
+    int combo = (1 << k) - 1;
+    // vector<vector<pair<int, float>>> result = {};
+    vector<unordered_set<pair<int, int>, pairHash>> result = {};
+    while ((combo < 1 << n)) {
+        // pretty_print(c, combo);
+
+        unordered_set<pair<int, int>, pairHash> currentCombo;
+        // vector<pair<int, float>> currentCombo;
+        for (int i = 0; i < n; i++) {
+            if (((combo >> i) & 1))
+                currentCombo.insert(c[i]);
+        }
+
+        if (currentCombo.size() == k) {
+            result.push_back(currentCombo);
+        }
+
+        int x = combo & -combo;
+        int y = combo + x;
+        int z = (combo & ~y);
+        combo = z / x;
+        combo >>= 1;
+        combo |= y;
+    }
+
+    return result;
 }
