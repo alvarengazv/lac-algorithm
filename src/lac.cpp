@@ -147,12 +147,16 @@ void Lac::testing(string path)
 
                 vector<int> intersectionPerTupla = {};
 
-                if (cache.find(combinacoesFeatures) != cache.end())
+                if (combinacoes.size() == 1)
+                {
+                    intersectionPerTupla = combinacoes[0];
+                }
+                else if (cache.find(combinacoesFeatures) != cache.end())
                 {
                     intersectionPerTupla = cache[combinacoesFeatures];
                     cacheUsingCounter++;
                 }
-                else
+                else if(combinacoes.size()<4)
                 {
                     {
                         intersectionPerTupla = intersectionAll(combinacoes);
@@ -161,11 +165,8 @@ void Lac::testing(string path)
                     }
                 }
 
-                // intersectionPerTupla = intersectionAll(combinacoes);
-                // intersectionCounter++;
-                // cout << "Qntd: " << intersectionCounter << endl;
+                // cout << "Intersec: " << intersectionCounter << endl;
                 // cout << "Cache: " << cacheUsingCounter << endl;
-
                 for (auto c : classes)
                 {
                     vector<int> intersecao;
@@ -182,20 +183,21 @@ void Lac::testing(string path)
             }
         }
 
-         
-
         int classification = findMaxIndex(result, classes.size());
 
         // cout << "Classificação: " << classification << " Valor: " << result[classification] << " Correta: " << values.back() << endl;
 
         // outFile << (j - 1) << "," << classification << endl;
 
+        cout << j << endl;
         totalResult[classification] += 1.0f;
 
         if (classification == values.back())
             acertos++;
         else
             erros++;
+
+        j++;
     }
 
     cout << "Acertos: " << acertos << " Erros: " << erros << endl;
@@ -303,14 +305,12 @@ int Lac::findMaxIndex(double *arr, int size)
 
     for (int i = 1; i < size; ++i)
     {
-        // cout <<arr[i]<<",";
         if (arr[i] > maxValue)
         {
             maxValue = arr[i];
             maxIndex = i;
         }
     }
-    // cout<<endl;
 
     return maxIndex;
 }

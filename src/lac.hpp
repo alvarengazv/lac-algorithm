@@ -48,7 +48,7 @@ private:
     // unordered_map<pair<int, float>, vector<int>, pairHash> features;
     unordered_map<pair<int, int>, vector<int>, pairHash> features;
     unordered_map<int, vector<int>> classes;
-    unordered_map<vector<std::pair<int, int>>,vector<int>, vector_pair_hash, vector_pair_equal> cache;
+    unordered_map<vector<pair<int, int>>,vector<int>, vector_pair_hash, vector_pair_equal> cache;
 
 public:
     // Lac(unordered_map<pair<int, float>, vector<int>, pairHash> features, unordered_map<int, vector<int>> classes);
