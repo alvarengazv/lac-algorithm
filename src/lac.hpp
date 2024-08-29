@@ -11,19 +11,13 @@
 #include <vector>
 
 #define MIN_SUPORTE 0
-#define INTERSECTION_LIMIT 15
+#define INTERSECTION_LIMIT 10
 
 using namespace std;
 
 template <typename T>
 void hashCombine(size_t& seed, T const& v) {
-    if constexpr (std::is_same_v<T, std::pair<int, int>>) {
-        // Special handling for std::pair<int, int>
-        seed ^= std::hash<int>()(v.first) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= std::hash<int>()(v.second) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    } else {
-        seed ^= std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    }
+    seed ^= std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
 struct pairHash {
@@ -51,40 +45,20 @@ struct unordered_set_pair_equal {
     }
 };
 
-struct setHash {
-    std::size_t operator()(const std::unordered_set<std::pair<int, int>, pairHash>& s) const {
-        std::size_t seed = 0;
-        for (const auto& p : s) {
-            hashCombine(seed, p);
-        }
-        return seed;
-    }
-};
-
-struct cacheKeyHash {
-    std::size_t operator()(const std::pair<std::unordered_set<std::pair<int, int>, pairHash>, int>& k) const {
-        size_t seed = setHash{}(k.first);
-        hashCombine(seed, k.second);
-        return seed;
-    }
-};
-
-// Modified cacheResults declaration
-using CacheKey = std::pair<std::unordered_set<std::pair<int, int>, pairHash>, int>;
-using CacheValue = double;
+using CacheKey = std::unordered_set<std::pair<int, int>, pairHash>;
+using CacheValue = double[10];
 
 class Lac {
    private:
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> features;
     unordered_map<int, unordered_set<int>> classes;
-    unordered_map<unordered_set<pair<int, int>, pairHash>, unordered_set<int>, unordered_set_pair_hash, unordered_set_pair_equal> cache;
-    std::unordered_map<CacheKey, CacheValue, cacheKeyHash> cacheResults;
+    std::unordered_map<CacheKey, CacheValue, unordered_set_pair_hash, unordered_set_pair_equal> cacheResults;
 
    public:
     Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes);
     void readFile(string path);
     void training(string path);
-    void testing(string path);
+    float testing(string path);
     int intersection(unordered_set<int> first, unordered_set<int> second);
     unordered_set<int> intersectionAll(vector<unordered_set<int>> list);
     int findMaxIndex(double* arr, int size);
