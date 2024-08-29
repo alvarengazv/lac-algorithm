@@ -98,4 +98,4 @@
 98,0
 99,0
 100,0
-Acertos(loss): 50 e Erros(accuracy): 50
+Acertos(accuracy): 50 e Erros(loss): 50

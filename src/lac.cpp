@@ -64,31 +64,36 @@ void Lac::testing(string path) {
     }
 
     string line;
-    int j = 1, erros = 0, acertos = 0;
+    int j = 1, erros = 0, acertos = 0, intersectionCounter = 0, cacheUsingCounter = 0;
+    vector<float> totalResult(10, 0.0f);
 
     while (getline(file, line)) {
         double result[classes.size()] = {0};
 
         // vector<float> values = splitString(line);
         vector<int> values = splitString(line);
-        vector<pair<int, int>> lineFeatures;
+        vector<pair<int, int>> lineFeaturesCartas;
+        vector<pair<int, int>> lineFeaturesNaipes;
         // vector<pair<int, float>> lineFeatures;
 
         int i = 0;
         for (auto v : values) {
             pair<int, int> feature(++i, v);
 
-            if (features.find(feature) != features.end())
-                lineFeatures.push_back(feature);
+            if (features.find(feature) != features.end()) {
+                if (i % 2 != 0) {
+                    lineFeaturesNaipes.push_back(feature);
+                } else {
+                    lineFeaturesCartas.push_back(feature);
+                }
+            }
 
             if (i == values.size() - 1)
                 break;
         }
         // cout << "Tamanho do features: " << lineFeatures.size() << endl;
+        int n = 10;
 
-        int n = lineFeatures.size();
-
-        int qtdIntersecao = -1;
         vector<unordered_set<pair<int, int>, pairHash>> combinacoesFeatures = {};
 
         // Acessando as linhas de cada tupla: 1 a 1, 2 a 2 e assim
@@ -97,7 +102,21 @@ void Lac::testing(string path) {
         for (int q = 1; q <= n; q++) {
             if (shouldStop)
                 break;
-            combinacoesFeatures = combo(lineFeatures, q);
+            combinacoesFeatures = combo(lineFeaturesNaipes, q);
+            vector<unordered_set<pair<int, int>, pairHash>> combinacoesAux = combo(lineFeaturesCartas, q);
+            combinacoesFeatures.insert(combinacoesFeatures.end(), combinacoesAux.begin(), combinacoesAux.end());
+
+            // mostrar as combinacoes
+            // for (auto c : combinacoesFeatures) {
+            //     for (auto pair : c) {
+            //         cout << pair.first << " " << pair.second << " ";
+            //     }
+            //     cout << endl;
+            // }
+            // cout << "Tamanho das combinacoes: " << combinacoesFeatures.size() << endl;
+            // int aux1 = 0;
+            // cin >> aux1;
+
             for (int r = 0; r < combinacoesFeatures.size(); r++) {
                 // vector para guardar as combinacoes das linhas das features, 1 a 1, 2 a 2.....
                 vector<unordered_set<int>> combinacoesLinhas = {};
@@ -109,18 +128,37 @@ void Lac::testing(string path) {
                 }
 
                 // fazendo a interseção das combinacoes 1 a 1, 2 a 2.....
-                unordered_set<int> intersectionPerTupla = intersectionAll(combinacoesLinhas);
 
-                qtdIntersecao = intersectionPerTupla.size();
+                unordered_set<int> intersectionPerTupla = {};
 
-                if (qtdIntersecao <= INTERSECTION_LIMIT) {
-                    shouldStop = true;
-                    continue;
+                if (combinacoesFeatures[r].size() == 1) {
+                    intersectionPerTupla = combinacoesLinhas[0];
+                } else if (cache.find(combinacoesFeatures[r]) != cache.end()) {
+                    // cout << "Usou o cache!" << endl;
+                    intersectionPerTupla = cache[combinacoesFeatures[r]];
+                    // cout << "Size: " << intersectionPerTupla.size() << endl;
+                    cacheUsingCounter++;
+                } else {
+                    intersectionPerTupla = intersectionAll(combinacoesLinhas);
+                    if (intersectionPerTupla.size() > INTERSECTION_LIMIT) {
+                        cache[combinacoesFeatures[r]] = intersectionPerTupla;
+                        intersectionCounter++;
+                    } else {
+                        shouldStop = true;
+                        continue;
+                    }
                 }
 
-                // cout << "Tamanho da intersecao: " << qtdIntersecao << endl;
+                // std::cout << "Cache size: " << cache.size() << std::endl;
 
+                // cout << "Intersec: " << intersectionCounter << endl;
+                // cout << "Cache: " << cacheUsingCounter << endl;
                 for (auto c : classes) {
+                    if (cacheResults.find(pair<unordered_set<pair<int, int>, pairHash>, int>(combinacoesFeatures[r], c.first)) != cacheResults.end()) {
+                        // cout << "Usou o cache2!" << endl;
+                        result[c.first] += cacheResults[pair<unordered_set<pair<int, int>, pairHash>, int>(combinacoesFeatures[r], c.first)];
+                        continue;
+                    }
                     unordered_set<int> intersecao;
                     for (const auto &elem : intersectionPerTupla) {
                         if (c.second.find(elem) != c.second.end()) {
@@ -131,6 +169,7 @@ void Lac::testing(string path) {
 
                     if (confident > MIN_SUPORTE) {
                         double support = (double)confident / (double)features.size();
+                        cacheResults[pair<unordered_set<pair<int, int>, pairHash>, int>(combinacoesFeatures[r], c.first)] = support;
                         result[c.first] += support;
                     }
                 }
@@ -157,7 +196,7 @@ void Lac::testing(string path) {
     // Porcentagem de acertos
     cout << "Porcentagem de acertos: " << (acertos * 100) / (acertos + erros) << "%" << endl;
 
-    outFile << "Acertos(loss): " << acertos << " e Erros(accuracy): " << erros;
+    outFile << "Acertos(accuracy): " << acertos << " e Erros(loss): " << erros;
 
     file.close();
 }
@@ -225,7 +264,6 @@ int Lac::findMaxIndex(double *arr, int size) {
     double maxValue = arr[0];
 
     for (int i = 1; i < size; ++i) {
-        // cout << "Classe: " << i << " Valor: " << arr[i] << endl;
         if (arr[i] > maxValue) {
             maxValue = arr[i];
             maxIndex = i;

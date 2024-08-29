@@ -14,6 +14,7 @@ int main() {
     auto start = chrono::high_resolution_clock::now();
 
     lac.testing("datasets/poker-hand-testing-100.data");
+    // lac.testing("datasets/poker-hand-testing.data");
     // lac.testing("datasets/iris-training.data");
 
     auto end = chrono::high_resolution_clock::now();
