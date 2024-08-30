@@ -169,9 +169,9 @@ float Lac::testing(string path) {
                     //     result[c.first] += support;
                     // }
 
-                     if (confident >= MIN_INTERSECTIONS) {
-                         break;
-                     }
+                    //  if (confident >= MIN_INTERSECTIONS) {
+                    //      break;
+                    //  }
 
                     if (confident > MIN_SUPORTE) {
                         double support = (double)confident / (double)features.size();
@@ -189,12 +189,12 @@ float Lac::testing(string path) {
                 // }
                 // cout << endl;
 
-                unordered_set<pair<int, int>, pairHash> teste;
-                teste.insert(pair(3, 37));
-                teste.insert(pair(1, 29));
-                if (cacheResults.find(teste) != cacheResults.end()) {
-                    cout << "Encontrou" << endl;
-                }
+                // unordered_set<pair<int, int>, pairHash> teste;
+                // teste.insert(pair(3, 37));
+                // teste.insert(pair(1, 29));
+                // if (cacheResults.find(teste) != cacheResults.end()) {
+                //     cout << "Encontrou" << endl;
+                // }
             }
         }
 
