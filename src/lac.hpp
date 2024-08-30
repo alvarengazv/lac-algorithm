@@ -11,7 +11,8 @@
 #include <vector>
 
 #define MIN_SUPORTE 0
-#define INTERSECTION_LIMIT 10
+#define MIN_INTERSECTIONS 1
+#define INTERSECTION_LIMIT 1
 
 using namespace std;
 
@@ -33,7 +34,7 @@ struct unordered_set_pair_hash {
     size_t operator()(const std::unordered_set<std::pair<int, int>, pairHash>& v) const {
         size_t seed = 0;
         for (const auto& p : v) {
-            seed ^= pairHash{}(p) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            seed ^= pairHash{}(p) + 0x9e3779b9;
         }
         return seed;
     }
@@ -49,7 +50,10 @@ using CacheKey = std::unordered_set<std::pair<int, int>, pairHash>;
 using CacheValue = double[10];
 
 class Lac {
+
    private:
+    // int MIN_INTERSECTIONS = 0;
+    // int INTERSECTION_LIMIT = 0;
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> features;
     unordered_map<int, unordered_set<int>> classes;
     std::unordered_map<CacheKey, CacheValue, unordered_set_pair_hash, unordered_set_pair_equal> cacheResults;
@@ -73,6 +77,8 @@ class Lac {
     vector<unordered_set<pair<int, int>, pairHash>> combo(const vector<pair<int, int>>& c, int k);
     // void pretty_print(const vector<pair<int, float>> &c, int combo);
     void pretty_print(const vector<pair<int, int>>& c, int combo);
+    // void setIntersectionLimit(int intersectionLimit);
+    // void setMinIntersections(int minIntersections);
 };
 
 #endif

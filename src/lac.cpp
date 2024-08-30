@@ -5,6 +5,15 @@ Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, u
     this->classes = classes;
 }
 
+// void Lac::setIntersectionLimit(int intersectionLimit) {
+//     INTERSECTION_LIMIT = intersectionLimit;
+// }
+
+// void Lac::setMinIntersections(int minIntersections) {
+//     MIN_INTERSECTIONS = minIntersections;
+// }
+
+
 void Lac::readFile(string path) {
 }
 
@@ -154,11 +163,37 @@ float Lac::testing(string path) {
                     }
                     int confident = intersecao.size();
 
+                    // if (confident > MIN_INTERSECTION) {
+                    //     double support = (double)confident / (double)features.size();
+                    //     cacheResults[combinacoesFeatures[r]][c.first] = support;
+                    //     result[c.first] += support;
+                    // }
+
+                     if (confident >= MIN_INTERSECTIONS) {
+                         break;
+                     }
+
                     if (confident > MIN_SUPORTE) {
                         double support = (double)confident / (double)features.size();
                         cacheResults[combinacoesFeatures[r]][c.first] = support;
                         result[c.first] += support;
                     }
+                }
+
+                // for (auto k : combinacoesFeatures[r]) {
+                //     cout << k.first << " " << k.second << ", ";
+                // }
+                // cout << " ===> ";
+                // for (int k = 0; k < 10; k++) {
+                //     cout << cacheResults[combinacoesFeatures[r]][k] << " ";
+                // }
+                // cout << endl;
+
+                unordered_set<pair<int, int>, pairHash> teste;
+                teste.insert(pair(3, 37));
+                teste.insert(pair(1, 29));
+                if (cacheResults.find(teste) != cacheResults.end()) {
+                    cout << "Encontrou" << endl;
                 }
             }
         }
