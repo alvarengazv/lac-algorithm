@@ -11,7 +11,7 @@
 #include <vector>
 
 #define MIN_SUPORTE 0
-#define MIN_INTERSECTIONS 1
+// #define MIN_INTERSECTIONS 1
 #define INTERSECTION_LIMIT 1
 
 using namespace std;
