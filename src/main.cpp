@@ -30,73 +30,86 @@ void loadData(const std::string& fileName, std::vector<std::vector<int>>& featur
     }
 }
 
-// Função para calcular o valor do teste do qui-quadrado
-double chiSquared(const unordered_map<pair<int, int>, int, pairHash>& observed, 
-                  const unordered_map<pair<int, int>, double, pairHash>& expected) {
-    double chi2 = 0.0;
-    for (const auto& pair : observed) {
-        int obs = pair.second;
-        double exp = expected.at(pair.first);
-        if (exp != 0) {
-            chi2 += pow(obs - exp, 2) / exp;
-        }
+// Função para calcular o valor do F-test para ANOVA
+double fTestAnova(const vector<double>& groupMeans, const vector<double>& groupVariances, 
+                  const vector<int>& groupSizes, double overallMean, int totalSamples) {
+    int numGroups = groupMeans.size();
+
+    double ssBetween = 0.0; // Soma dos quadrados entre grupos
+    double ssWithin = 0.0;  // Soma dos quadrados dentro dos grupos
+
+    for (int i = 0; i < numGroups; ++i) {
+        ssBetween += groupSizes[i] * pow(groupMeans[i] - overallMean, 2);
+        ssWithin += (groupSizes[i] - 1) * groupVariances[i];
     }
-    return chi2;
+
+    double msBetween = ssBetween / (numGroups - 1);          // Mean Square Between
+    double msWithin = ssWithin / (totalSamples - numGroups);  // Mean Square Within
+
+    return msBetween / msWithin; // F-value
 }
 
-// Função para aplicar o teste do qui-quadrado e selecionar características
-vector<int> featureSelectionChiSquared(const std::vector<std::vector<int>>& features, 
-                                       const std::vector<int>& labels, int topK) {
+// Função para aplicar o teste ANOVA e selecionar características
+vector<int> featureSelectionAnova(const std::vector<std::vector<int>>& features, 
+                                  const std::vector<int>& labels, int topK) {
     int numSamples = features.size();
     int numFeatures = features[0].size();
     int numClasses = *max_element(labels.begin(), labels.end()) + 1;
 
-    vector<double> chi2Scores(numFeatures, 0.0);
-    
+    vector<double> fScores(numFeatures, 0.0);
+
     // Para cada característica
     for (int featureIdx = 0; featureIdx < numFeatures; ++featureIdx) {
-        unordered_map<pair<int, int>, int, pairHash> observed;
-        unordered_map<pair<int, int>, double, pairHash> expected;
+        vector<double> groupMeans(numClasses, 0.0);
+        vector<double> groupVariances(numClasses, 0.0);
+        vector<int> groupSizes(numClasses, 0);
 
-        // Contar a frequência observada
+        double overallMean = 0.0;
+
+        // Calcular médias de cada grupo
         for (int i = 0; i < numSamples; ++i) {
             int featureValue = features[i][featureIdx];
             int label = labels[i];
-            observed[{featureValue, label}]++;
+            groupMeans[label] += featureValue;
+            groupSizes[label]++;
         }
 
-        // Calcular as frequências esperadas
-        unordered_map<int, int> featureCounts;
-        unordered_map<int, int> labelCounts;
-
-        for (const auto& pair : observed) {
-            featureCounts[pair.first.first]++;
-            labelCounts[pair.first.second]++;
+        // Calcular média global
+        for (int j = 0; j < numClasses; ++j) {
+            if (groupSizes[j] > 0) {
+                groupMeans[j] /= groupSizes[j];
+                overallMean += groupMeans[j] * groupSizes[j];
+            }
         }
+        overallMean /= numSamples;
 
-        int total = numSamples;
-        for (const auto& featureCount : featureCounts) {
-            for (const auto& labelCount : labelCounts) {
-                double exp = (static_cast<double>(featureCount.second) * labelCount.second) / total;
-                expected[{featureCount.first, labelCount.first}] = exp;
+        // Calcular variâncias de cada grupo
+        for (int i = 0; i < numSamples; ++i) {
+            int featureValue = features[i][featureIdx];
+            int label = labels[i];
+            groupVariances[label] += pow(featureValue - groupMeans[label], 2);
+        }
+        for (int j = 0; j < numClasses; ++j) {
+            if (groupSizes[j] > 1) {
+                groupVariances[j] /= (groupSizes[j] - 1);
             }
         }
 
-        // Calcular o valor do qui-quadrado
-        double chi2Value = chiSquared(observed, expected);
-        chi2Scores[featureIdx] = chi2Value;
+        // Calcular valor F da ANOVA
+        double fValue = fTestAnova(groupMeans, groupVariances, groupSizes, overallMean, numSamples);
+        fScores[featureIdx] = fValue;
     }
 
-    // Ordenar características com base nos valores do qui-quadrado
+    // Ordenar características com base nos valores de F
     vector<int> selectedFeatures;
-    vector<pair<double, int>> chi2FeaturePairs;
+    vector<pair<double, int>> fFeaturePairs;
     for (int i = 0; i < numFeatures; ++i) {
-        chi2FeaturePairs.push_back({chi2Scores[i], i});
+        fFeaturePairs.push_back({fScores[i], i});
     }
-    sort(chi2FeaturePairs.rbegin(), chi2FeaturePairs.rend()); // Ordena do maior para o menor
+    sort(fFeaturePairs.rbegin(), fFeaturePairs.rend()); // Ordena do maior para o menor
 
     for (int i = 0; i < topK; ++i) {
-        selectedFeatures.push_back(chi2FeaturePairs[i].second);
+        selectedFeatures.push_back(fFeaturePairs[i].second);
     }
 
     return selectedFeatures;
@@ -109,9 +122,9 @@ int main() {
     // Carregar dados
     loadData("datasets/poker-hand-training.data", features, labels);
 
-    // Selecionar características usando o teste do qui-quadrado
+    // Selecionar características usando ANOVA
     int topK = 10;  // Número de características a selecionar
-    vector<int> selectedFeatures = featureSelectionChiSquared(features, labels, topK);
+    vector<int> selectedFeatures = featureSelectionAnova(features, labels, topK);
 
     cout << "Características selecionadas (índices): ";
     for (int idx : selectedFeatures) {
