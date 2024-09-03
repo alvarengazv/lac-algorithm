@@ -7,7 +7,12 @@ int main() {
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> features;
     unordered_map<int, unordered_set<int>> classes;
 
-    Lac lac = Lac(features, classes);
+    bool decreaseCardinality = false;
+
+    cout << "Deseja reduzir a cardinalidade? (1 - Sim, 0 - Não)" << endl;
+    cin >> decreaseCardinality;
+
+    Lac lac = Lac(features, classes, decreaseCardinality);
 
     // treino
     lac.training(trainingFile);

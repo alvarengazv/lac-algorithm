@@ -2,18 +2,18 @@
 #define LAC_HPP
 
 #include <bits/stdc++.h>
-#include <pthread.h>
-
-#include <cmath>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
+// Pra usar:
+// pthread.h
+// cmath
+// fstream
+// iostream
+// string
+// unordered_map
+// unordered_set
+// vector
+// chrono
 
 #define MIN_SUPORTE 0
-#define INTERSECTION_LIMIT 0
 #define THRESHOLD 0.95
 
 using namespace std;
@@ -77,24 +77,23 @@ using cacheKey = std::unordered_set<std::pair<int, int>, pairHashSimilarity>;
 using cacheValue = double[10];
 
 struct ThreadData {
-    vector<unordered_set<pair<int, int>, pairHash>>* combinacoesFeatures;
+    vector<unordered_set<pair<int, int>, pairHash>>* combinationsFeatures;
     unordered_map<pair<int, int>, unordered_set<int>, pairHash>* features;
     unordered_map<int, unordered_set<int>>* classes;
     int start;
     int end;
     double* result;
-    unordered_map<cacheKey, cacheValue, unorderedSetPairHash, unorderedSetPairEqual>* cacheResults;
 };
 
 class Lac {
    private:
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> features;
     unordered_map<int, unordered_set<int>> classes;
-    std::unordered_map<cacheKey, cacheValue, unorderedSetPairHash, unorderedSetPairEqual> cacheResults;
-    std::unordered_map<vector<pair<int, int>>, int, vectorPairHash, vectorPairEqual> lshBuckets;
+    bool decreaseCardinality = false;
+    std::unordered_map<vector<pair<int, int>>, int, vectorPairHash, vectorPairEqual> similarityCache;
 
    public:
-    Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes);
+    Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes, bool decreaseCardinality);
     void training(string path);
     float testing(string path);
     int intersection(unordered_set<pair<int, int>, pairHash> first, unordered_set<pair<int, int>, pairHash> second);
@@ -103,15 +102,12 @@ class Lac {
     vector<int> splitString(string line);
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> getFeatures();
     unordered_map<int, unordered_set<int>> getClasses();
-    void imprimirFeatures();
-    void imprimirClasses();
-    vector<unordered_set<pair<int, int>, pairHash>> combo(const vector<pair<int, int>>& c, int k);
-    void generateLSH(vector<pair<int, int>> lineFeatures, int classBucket);
+    vector<unordered_set<pair<int, int>, pairHash>> combinations(const vector<pair<int, int>>& c, int k);
+    void populateCache(vector<pair<int, int>> lineFeatures, int classBucket);
     pair<int, double> checkSimilarity(vector<pair<int, int>> lineFeatures);
     double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2);
-    double jaccardSimilarity(const vector<pair<int, int>>& vec1, const vector<pair<int, int>>& vec2);
-    int intersectionSize(const unordered_set<int>& set1, const unordered_set<int>& set2);
-    static void* threadIntersecao(void* arg);
+    static void* threadIntersection(void* arg);
+    static int INTERSECTION_LIMIT;
 };
 
 #endif
