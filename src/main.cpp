@@ -1,8 +1,8 @@
 #include "lac.hpp"
 
 int main() {
-    std::string trainingFile = "datasets/poker-hand-training-binary-balanced.data";
-    std::string testingFile = "datasets/poker-hand-testing-100-3.data";
+    string trainingFile = "datasets/base-avaliacao/poker-hand-training.data";
+    string testingFile = "datasets/base-avaliacao/poker-hand-testing.data";
 
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> features;
     unordered_map<int, unordered_set<int>> classes;

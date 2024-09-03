@@ -13,6 +13,7 @@
 
 Algoritmos e Estruturas de Dados I <br>
 Engenharia de Computação <br>
+Prof. Michel Pires da Silva <br>
 CEFET-MG Campus V <br>
 2024/1  
 </div>
@@ -73,6 +74,7 @@ CEFET-MG Campus V <br>
 ## 🔍 Introdução
 
 <div align='justify'>
+
   Este [trabalho][trabalho-url] (Algoritmo de Classificação LAC) foi proposto na disciplina de Algoritmos e Estruturas de Dados I (AEDSI) pelo professor [Michel Pires da Silva][github-prof].
 
   A partir da base do algoritmo apresentado pelo Prof. Dr. Adriano Veloso em sua tese de doutorado [^1], neste projeto, iremos nos aprofundar em conceitos e práticas que visam melhorar a eficácia de tal algoritmo. O algoritmo apresentado em [^1], utiliza um conceito de treino e teste para classificar determinadas bases de dados. Primeiramente, o algoritmo busca mapear os dados a serem classificados por meio de ocorrências selecionadas, denominadas base de treino. Em seguida, ao ser apresentada a base de dados onde será feita a classificação, chamada base de teste, o algoritmo, tendo acesso às informações coletadas no treino, pode utilizar conceitos como similaridade, confiança e suporte para realizar a classificação de determinado conjunto de dados.
@@ -148,13 +150,13 @@ Para realizar tal procedimento, nosso algoritmo executa as seguintes etapas: Pri
 
 
 <div align='center'>
-  <img src='./images/mapeamentoTeste.png' alt='Exemplo de Mapeamento Fase de Teste' width='300px'>
+  <img src='./images/mapeamentoTeste.png' alt='Exemplo de Mapeamento Fase de Teste' width='400px'>
   <p>Exemplo de Mapeamento Fase de Teste</p>
 </div>
 
 Realizado o mapeamento, acessamos na tabela invertida de features, criada na fase de treino, o array de inteiros que representa cada linha onde determinada feature aparece. Em seguida, realizamos um procedimento que realiza interseções entre os arrays provenientes de cada tupla, ou seja, comparamos quais e quantas linhas determinadas tuplas têm em comum, de forma a fazer a análise combinatória de todas as interseções possíveis. Durante esse procedimento, ao realizar as interseções entre os arrays referentes a cada tupla, calculamos o suporte e a confiança, variáveis responsáveis por classificar cada mão. Ao calcular as interseções para cada combinação de features, iteramos sobre a matriz invertida de classes, criada durante o treinamento, e, para cada classe, fazemos a interseção entre o array de inteiros que representa as linhas onde a classe aparece e o array resultante da interseção da análise combinatória das features. O nosso valor **confiança** recebe o tamanho do vetor resultante dessa interseção.
 
-Por fim, na iteração para cada classe, para calcular o suporte, dividimos o valor da **confiança** pela quantidade de features presentes na base de dados construída durante o treinamento. Dessa forma, ao calcular o valor de suporte, este é somado em um array **resultado**, que é responsável por guardar a soma do suporte para cada classe. Após realizar todas as análises combinatórias possíveis, a classe atribuída para a mão será aquela que tiver o maior valor de suporte no array **resultado**.
+Por fim, na iteração para cada classe, para calcular o suporte, dividimos o valor da **confiança** pela quantidade de features presentes na base de dados construída durante o treinamento. Dessa forma, ao calcular o valor de suporte, este é somado em um array `resultado`, que é responsável por guardar a soma do suporte para cada classe. Após realizar todas as análises combinatórias possíveis, a classe atribuída para a mão será aquela que tiver o maior valor de suporte no array `resultado`.
 
 Concluímos, assim, o procedimento necessário para realizar a classificação de cada mão/linha da base de dados [^2]. A seguir, veremos as otimizações propostas com o objetivo de aprimorar esse procedimento, buscando alcançar resultados mais satisfatórios em termos de tempo e acurácia, bem como a forma com a qual as mesma foram implementadas.
 
@@ -177,6 +179,112 @@ Concluímos, assim, o procedimento necessário para realizar a classificação d
 </div>
 
 <p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
+
+## 🔬 Modelagem de Aplicação 
+
+<div aling='justify'>
+
+  Partindo do conceito apresentado acima, é possível abordar diferentes soluções para o nosso estudo. Nesta seção, apresentaremos a forma com a qual modelamos o problema, bem como as estratégias de otimização empregadas para aumentar o desempenho em termos de acurácia das classificações e tempo gasto nessa tarefa. Para implementar nossa solução, a linguagem escolhida foi C++, uma vez que esta nos oferece um paradigma procedural que demonstra ótimo desempenho ao lidar com o processamento de grandes volumes de instruções e também conta com a vantagem de ter diversas estruturas de dados implementadas que facilitam a modelagem da solução
+
+  ### 📊 Estrutura de Dados
+
+  Compreendendo o procedimento proposto pelo algoritmo [^1], torna-se claro que, em alguns casos, estruturas de dados primárias não são suficientes para construir uma solução ideal. Por exemplo, a construção das tabelas invertidas, tanto na fase de treino quanto na de teste. Sendo assim, torna-se mister o uso de estruturas de dados mais complexas, a fim de obter um código limpo, que mantenha a consistência com o modelo apresentado e apresente bom desempenho.
+
+  A começar pelo exemplo citado acima, definamos como e com quais estruturas de dados foram implementadas as tabelas invertidas. Primeiramente, ao mapear as entradas de dados, antes mesmo de começar a preencher as tabelas invertidas de features e classes, utilizou-se da estrutura `pair`, apresentada em [^3]. Essa estrutura nos permite armazenar dois valores em uma única variável, estabelecendo de forma clara o conceito de tupla, ideal para modelar esses dados. Fica evidente que os valores 
+  armazenados em cada `pair` correspondem ao número da coluna e ao valor presente na mesma, sendo, portanto, um `pair` 
+  do tipo <int,int>. Essa estrutura foi utilizada ainda em outras partes da aplicação, dada sua eficácia e facilidade de uso.
+
+  Para a criação das tabelas invertidas, primeiramente referente às features, utilizou-se da estrutura `unordered_map`, apresentada em [^4]. Tal estrutura representa uma tabela que, novamente, utiliza-se do conceito <Chave, Valor>. Para modelar nossos dados, definiu-se que a chave para cada `unordered_map` seria uma estrutura do tipo `pair`, citada acima, e o valor contido na mesma seria representado por um `vector`, estrutura apresentada em [^5], uma espécie de array dinamico, otimizado, de  fácil uso e com pouca necessidade de gerenciamento de memória. Nessas tabelas, as estruturas do tipo `pair` representam as features, e as do tipo `vector` representam as linhas onde cada feature teve recorrência. De forma semelhante, deu-se a implementação da tabela invertida referente às classes, sendo que a única divergência se deu ao fato de que as chaves utilizadas para preencher o `unordered_map` foram variáveis do tipo inteiro, que por sua vez representam as classes em questão, enquanto seus valores, também de forma semelhante, são constituídos por um `vector` que armazena as linhas onde as mesmas apareceram na base de treino. Passemos, agora, para estruturas utilizadas durante o teste. 
+
+  Como exemplificado no tópico sobre o fundamento teórico, durante o mapeamento de dados realizado na fase de teste, é necessário utilizar estruturas para modelar as features presentes nesta base de dados, de forma semelhante às usadas durante o processo de treino. Para tanto, utilizou-se a mesma estrutura `pair`. Continuando na mesma fase da aplicação, utilizou-se novamente a estrutura do tipo `vector` para guardar os resultados das combinações feitas entre as features de cada linha. Dessa vez, o valor armazenado foi um outro `vector`, criando-se o conceito de matriz, onde cada linha guardava a combinação das features, estruturas do tipo `pair`, que posteriormente seriam utilizadas para fazer as interseções e o cálculo do suporte e confiança. Por fim, para armazenar os valores provenientes das interseções feitas durante o processo de análise combinatória, foi utilizada, novamente, a estrutura `vector`, uma vez que esta nos possibilita saber a quantidade de elementos armazenados nela de forma nativa, sem a necessidade de implementar nenhuma função auxiliar.
+
+  É importante destacar a impossibilidade de utilizar determinadas estruturas de dados, como *chave*, em tabelas hash de forma nativa. Por exemplo, a necessidade de usar a estrutura `pair` como *chave* em uma estrutura `unordered_map` é um caso específico. Como a linguagem não oferece suporte nativo para funções de hash para determinadas estruturas, foi necessário criar funções de *hash* que lidam com essas estruturas, assim como funções de *equals* para validar a igualdade entre duas estruturas do mesmo tipo, a fim de utilizá-las como chave em outros contextos. Dessa forma, a limitação de não trabalhar de forma nativa pode impactar a performance do nosso algoritmo, embora o benefício da modelagem proposta supere os possíveis malefícios.
+
+  ### 🏋️‍♂️ Otimizações Propostas 
+
+  Inicialmente, para termos noção de quais partes de nosso algoritmo necessitam de mais otimização, criamos a seguinte divisão de tarefas, onde cada parte representa um procedimento realizado. Nota-se que, para esta divisão, não foram contabilizados os procedimentos realizados na fase de treino, uma vez que esta não é contabilizada no tempo de execução. Os procedimentos aqui apresentados dizem respeito apenas à função de teste:
+
+  **1º Procedimento:** Leitura linha a linha do arquivo.
+
+  **2º Procedimento:** Tokenização/Mapeamento das informações contidas no arquivo para variáveis do tipo `vector`.
+
+  **3º Procedimento:** Análise combinatória das tuplas/features, seguida da interseção entre elas.
+
+  **4º Procedimento:** Cálculo de suporte e confiança para a classificação.
+
+  Para o 1º Procedimento, o custo é linear, aumentando conforme a quantidade de linhas a serem lidas. Contudo, pode-se afirmar que, para a leitura de cada linha, este procedimento tem um custo constante, encontrando-se já em uma faixa de rendimento próximo à ideal. Dessa forma, embora existam possíveis otimizações a serem feitas nesse sentido, elas não impactarão de forma crucial a performance de nosso algoritmo.
+
+  Analisando agora o 2º Procedimento, temos que, de forma semelhante ao 1º Procedimento, seu custo está próximo da otimização, uma vez que o custo para realizá-lo é constante $\Theta(K)$, sendo **K** a quantidade de caracteres presentes em cada linha, que é onze, no caso do PokerHand data-set. Conclui-se, então, que este procedimento também não surte efeito significativo para nossa aplicação.
+
+  Partindo para o 3º procedimento, onde se encontram as maiores oportunidades de implementar otimizações. Esse procedimento consiste em realizar a análise combinatória entre todas as features e, durante esse processo, realizar a interseção entre elas. O fato é que existem diversas formas de implementar tanto a análise combinatória quanto as interseções entre os vetores. Contudo, tais procedimentos exigem um custo computacional significativamente maior em comparação com todos os demais procedimentos realizados até então, independente da forma como forem implementados. A título de exemplificação, consideremos uma amostra da base de dados para ilustrar:
+
+  **Dados:** 1, 11, 1, 10, 1, 12, 3, 8, 1, 9, 4
+
+  Para este exemplo, temos um total de 1023 combinações possíveis, calculadas pela seguinte somatória:
+
+$$
+\sum_{k=1}^{10} C(10,k) = 1023
+$$
+
+  <!-- Conferir somatorio e valor -->
+
+  Isso significa que será necessário, na forma padrão da implementação proposta, realizar 1023 processos de interseção entre vetores, sendo que, em alguns casos, se trata de interseções entre nove ou mais vetores. Para cada interseção entre dois ou mais vetores desordenados, que é o caso de nossa aplicação (uma vez que os vetores representam linhas que são dispostas de maneira não ordenada na tabela de features), o custo computacional é dado por $\Theta(n_{1} \cdot n_{2} \cdot n_{3} \cdots n_{k})$, onde $n$ é o tamanho de cada vetor. Com isso, vemos o quanto esse custo pode se tornar elevado à medida que aumenta a quantidade de elementos a serem intersectados.
+
+  A partir deste ponto, surgem otimizações que podem ter um grande impacto na eficiência do nosso algoritmo. Inicialmente, considerou-se a necessidade de não realizar interseções quando a análise combinatória envolve apenas uma única feature, uma vez que sua interseção será ela mesma. Assim, ao realizar análises combinatórias de forma individual, basta acessar a tabela de features na chave correspondente e retornar as linhas que pertencem a essa feature. Embora essa melhoria pareça insignificante, não havia sido prevista inicialmente no modelo base apresentado na fundamentação teórica, e ela evita processamentos desnecessários. A partir dessa melhoria, define-se o conceito a ser seguido para as próximas otimizações: evitar ao máximo realizar interseções desnecessárias e, se possível, eliminar o processo de análise combinatória.
+
+  Seguindo à risca esse conceito, apresenta-se a primeira grande otimização em relação ao modelo base apresentado anteriormente. Ao percebermos que, durante o processo de análise combinatória e interseção entre as *features* na fase de teste, muitas interseções eram realizadas repetidamente, resultando em um grande tempo de processamento para repetir procedimentos já realizados, surgiu uma ideia para otimizar esse processo. Pensou-se, então, em seguir a ideia de memória **cache**, presente na maioria dos computadores modernos, para utilizar uma tabela que armazenaria a classificação feita para análises combinatórias já realizadas. Dessa forma, ao encontrar um conjunto de *features* já processado anteriormente, nosso algoritmo realizará apenas uma busca na tabela de **cache**, economizando o processamento das interseções e também do cálculo de suporte e confiança. Para maximizar a quantidade de informações possíveis na memória **cache**, ao realizar a análise de um conjunto de *features* ainda não processado, seu resultado/classificação será salvo em uma tabela, tendo como chave um *array* de *pairs* que representam as *features* da análise. Assim, na próxima vez que surgir a necessidade de processar o mesmo conjunto de *features*, será feita uma busca na tabela; se tal conjunto já for uma chave armazenada, o processo de análise será ignorado, pois já se conhece o seu resultado. Para essa abordagem, quanto maior for a quantidade de dados a serem classificados, maior será a utilização da **memória cache** e, consequentemente, maior o ganho de desempenho.% Se quiser colocar alguma coisa sobre possiveis resultados de melhoria ao implementar o cache aqui eh o lugar
+
+  Para a próxima otimização implementada, sua origem se deu ao analisar minuciosamente o procedimento de análise combinatória. Verificou-se que, para determinado conjunto de *features*, ao realizar a interseção entre as mesmas, a dimensão do *array* resultante era ínfima, de modo que, ao utilizar essa dimensão para, posteriormente, calcular a confiança e o suporte para cada classe, obtinha-se um valor também ínfimo para cada classificaçao. Em um cenário ideal, onde o tempo não impacta na performance, seria necessário realizar todas as interseções, ainda que seu resultado se aproximasse da irrelevância para a classificação dos dados. Contudo, não sendo este o cenário proposto, optou-se por interromper o processo de análise ao atingir um determinado estágio, onde as interseções já não tinham impacto considerável nas classificações. Isso ocorre porque, quanto maior o conjunto de *features* analisadas, menor seria o *array* de interseção e, consequentemente, menor o impacto nas classificações. Com a implementação dessa regra de gerenciamento, o número de interseções desnecessárias foi drasticamente reduzido, assim como o processamento necessário para realizá-las. Observou-se também que, conforme previsto, a acurácia das classificações não sofreu prejuízo relevante, mantendo sua média anterior, com a única vantagem de melhorar o tempo gasto para realizá-las.
+
+  A partir do conceito implementado, de nao realizar o processo de analisse combinatoria a partir de um valor mínimo para a dimensão do **array** de interseções, surgiu a necessidade de um parâmetro que definisse qual seria o limite ideal. A partir desse ponto, se deu a próxima implementação que traria resultados de otimização para o LAC. Usando o conceito apresentado por L. He, Z. Gao, Q. Liu, e Z. Yang em [^6], o método **Grid Search** é uma técnica amplamente utilizada no contexto de aprendizado de máquinas, buscando ajustar hiperparâmetros para melhor desempenho de um modelo. A partir de uma série exaustiva de testes, o método retorna o melhor valor encontrado para ser usado em determinado parâmetro. Dessa forma, aplicando este método no contexto do LAC, mais especificamente em qual seria o valor mínimo ideal para a dimensão do vetor de interseções, para que seja relevante continuar realizando o processo de análise combinatoria. 
+
+  <!-- FALAR SOBRE COMO SE DEU A IMPLEMENTAÇÃO AQUI -->
+
+   Como resultado da implementação desse método, chegamos a um parâmetro que apresentou o melhor resultado entre todos os testes realizados, concluindo que a dimensão mínima esperada para continuar a análise seria de...
+
+  <!-- COLOCAR O VALOR AQUI, SE TIVER MESMO -->
+
+  Com isso, a implementação já feita, ponderando quando seria viável continuar com o processo de análise combinatória, teve ainda um impacto mais significativo, uma vez que obtivemos o parâmetro melhor ajustado para quando parar esta etapa.
+  
+  Passemos para a próxima otimização implementada durante este estudo. Tal implementação foi realizada visando seguir o conceito principal para a otimização do algoritmo: fazer o mínimo de interseções possíveis. Contudo, desta vez, a implementação ocorreu ao analisar os dados que eram submetidos para classificação, suas especificidades e como poderíamos usá-los para melhorar a performance. Dessa forma, pensou-se que, se fosse possível diminuir a quantidade de dados a serem processados, sem perder suas características, ou seja, sem desfigurá-los, surtiria em um grande impacto, uma vez que seria necessário realizar menos operações para classificar os mesmos dados. 
+
+  Com isso, através de um estudo específico para a base PokerHand DataSet, viu-se que seria possível diminuir a cardinalidade de cada linha/mão da seguinte forma: como cada par de colunas seguidas em nossa base de dados representa o naipe e o valor da carta, seria natural implementar um processo que possa juntar cada par de colunas, a fim de reduzir pela metade a quantidade de dados a serem classificados. Dessa forma, nossa base teria sua representação de 0 a 52, sendo cada valor a combinação entre um naipe e um valor, formando, assim, uma carta. Diversas são as formas de implementar processos que façam essa codificação, contudo, desde que não atribuam valores repetidos para combinações diferentes, a forma como ele lida com esse processo não impacta significativamente em nosso algoritmo, embora quanto mais simples for a implementação, melhor será o resultado obtido. A seguir, apresentamos a função responsável por fazer a codificação de cada par de valores.
+
+**Algoritmo: Codificação de uma carta de baralho** 
+```pseudo
+Entrada: naipe, valor
+Saída: carta
+
+Função codificacao(naipe, valor):
+    carta ← (naipe - 1) * 13 + (valor - 1)
+    Retorne carta
+``` 
+  A fim de economizar tempo e melhorar a performance, tal procedimento foi implementado durante o mapeamento das features, tanto na fase de treino quanto na fase de teste. Dessa forma, esta foi uma otimização que também impactou o 2º procedimento, não se limitando apenas a ele. A título de exemplo, mostramos como se deu a transformação dos dados para uma determinada série de cartas:
+
+  **Forma Padrão:** 1, 1, 1, 10, 1, 11, 1, 12, 1, 13, 9 
+
+  **Transformação:** 
+</div>
+<div align='center'>
+  (1, 1) → 0 <br>
+  (1, 10) → 9 <br>
+  (1, 11) → 10 <br>
+  (1, 12) → 11 <br>
+  (1, 13) → 12 <br>
+  (9) → 9 <br>
+</div>
+
+<div align='justify'>
+  Dessa forma, ao reduzir pela metade os dados a serem utilizados durante o processo de análise combinatória, a eficiência do nosso algoritmo teve um grande aumento, visto que será necessário realizar apenas 31 combinações ao invés de 1023, quantidade necessária para a análise de 10 valores. Essa redução, aplicada a todas as linhas do arquivo de teste, tem um grande impacto em todo o procedimento de classificação, sendo essa uma das principais otimizações implementadas.
+
+  <!-- Falar do LSH, ou nao, ainda nao ta decidido, fazer isso neste espaco -->
+
+  Por fim, para o 4º Procedimento, a busca por métodos que pudessem otimizá-lo não obteve tantos resultados quanto para o terceiro procedimento. Como apresentado na seção de fundamento teórico, o processo de cálculo de suporte e confiança para a classificação de determinada linha/mão se dá apenas realizando cálculos matemáticos, uma vez que a análise combinatória e interseções já foram realizadas. Sendo assim, ainda que a implementação do sistema de **memória cache** surtisse impacto também nesta fase da aplicação, reduzindo a necessidade de realizá-lo, não houve outra implementação que pudesse otimizá-lo, visto que o custo de realizar cálculos matemáticos tem pouco impacto durante a execução de nosso algoritmo, uma vez que tais instruções possuem custo de execução constante.
+
+  Em um contexto geral, buscando ainda outras formas de otimização, ao ler a documentação da linguagem utilizada para desenvolver o LAC, viu-se que haviam determinadas estruturas de dados que possuem melhor performance do que as utilizadas na versão inicial de nosso método. Entre tais estruturas de dados, figura-se principalmente o uso de `unordered set`, apresentado em [^7], no lugar do `vector`, estrutura usada para guardar os valores de recorrência de linhas tanto na fase de treino quanto durante o teste. Dessa forma, uma vez que o tempo de pesquisa fornecido pela estrutura `unordered set` se faz em tempo constante $\Theta(1)$, enquanto para o `vector` tem-se o custo linear $\Theta(n)$, em uma grande quantidade de pesquisas feitas, como no caso da nossa implementação do LAC, obtém-se um grande ganho de performance ao longo da execução até que seja realizada toda a classificação da base de dados em questão. Com isso, finalizamos as implementações que buscaram otimizar o LAC enquanto classificava o PokerHand dataset. Podemos concluir que amplas foram as abordagens de otimização, variando desde simplificações de processos até o estudo da base de dados para buscar melhores resultados, mostrando que diversos são os meios de conseguir melhorar determinados processos e alcançar ganhos em desempenho.
+
+</div>
+
 
 ## 🔬 Metodologia
 
@@ -204,10 +312,6 @@ O projeto é organizado da seguinte forma:
 │   │   ├── poker-hand-testing.data
 │   │   ├── poker-hand-training.data
 │   │   └── output.txt
-├── images
-│   │   ├── mapeamentoTeste.png
-│   │   ├── tabelaClsses.png
-│   │   └── tabelaFeatures.png
 ├── src
 │   │   ├── main.cpp
 │   │   ├── lac.cpp
@@ -224,6 +328,10 @@ Esta estrutura de diretórios facilita a organização do projeto e a localizaç
 ## 📊 Testes e Análises dos Resultados
 
 <div  align="justify">
+  Analisar os resultados obtidos após a implementação das otimizações propostas é essencial para avaliar a eficácia das melhorias realizadas. Para isso, é necessário realizar testes com diferentes configurações e comparar os resultados obtidos com a implementação padrão do algoritmo LAC. No decorrer da realização deste estudo, foram realizados testes utilizando a implementação padrão do algoritmo e as otimizações propostas, a fim de avaliar a eficácia das melhorias implementadas. Os testes foram realizados em um ambiente controlado, com as mesmas configurações de hardware e software, a fim de garantir a consistência dos resultados obtidos. A seguir, são apresentados os resultados dos testes realizados, bem como as análises feitas a partir dos mesmos.
+
+  ### Configurações dos Testes
+  Primeiramente, teve-se a implementação padrão do algoritmo LAC, sem nenhuma otimização, como base para os testes realizados. Em seguida, foram implementadas as otimizações propostas, uma a uma, a fim de avaliar o impacto de cada uma delas no desempenho do algoritmo. 
 
 </div>
 
@@ -362,10 +470,21 @@ O Makefile é um utilitário que automatiza o processo de compilação e execuç
 <p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
 
 📚 Referências
-
+-
 [^1]: A. A. Veloso, "Classificação associativa sob demanda," Ph.D. dissertação, Departamento de Ciência da Computação, Universidade Federal de Minas Gerais, Belo Horizonte, Brasil, 2009.
 
 [^2]: R. Cattral and F. Oppacher, *Poker Hand*, UCI Machine Learning Repository, 2007. [Online]. Available: https://doi.org/10.24432/C5KW38.
+
+[^3]: Microsoft, "pair structure," Microsoft Learn, 2024. [Online]. Available: https://learn.microsoft.com/pt-br/cpp/standard-library/pair-structure?view=msvc-170. [Accessed: Aug. 30, 2024].
+
+[^4]: Microsoft, "unordered_map class," Microsoft Learn, [Online]. Available: https://learn.microsoft.com/pt-br/cpp/standard-library/unordered-map-class?view=msvc-170. [Accessed: Aug. 30, 2024].
+
+[^5]: Microsoft, "vector class," Microsoft Learn, [Online]. Available: https://learn.microsoft.com/pt-br/cpp/standard-library/vector-class?view=msvc-170. [Accessed: Aug. 30, 2024].
+
+[^6]: L. He, Z. Gao, Q. Liu, e Z. Yang, "An Improved Grid Search Algorithm for Parameters Optimization on SVM," Applied Mechanics and Materials, vol. 644-650, pp. 2216-2221, 2014. DOI: 10.4028/www.scientific.net/AMM.644-650.2216.
+
+[^7]: "unordered_set Class | Microsoft Learn," Microsoft, [Online]. Available: https://learn.microsoft.com/pt-br/cpp/standard-library/unordered-set-class?view=msvc-170. [Accessed: 29-Aug-2024].
+
 
 [vscode-badge]: https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white
 [vscode-url]: https://code.visualstudio.com/docs/?dv=linux64_deb
