@@ -5,18 +5,6 @@ Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, u
     this->classes = classes;
 }
 
-// void Lac::setIntersectionLimit(int intersectionLimit) {
-//     INTERSECTION_LIMIT = intersectionLimit;
-// }
-
-// void Lac::setMinIntersections(int minIntersections) {
-//     MIN_INTERSECTIONS = minIntersections;
-// }
-
-
-void Lac::readFile(string path) {
-}
-
 void Lac::training(string path) {
     ifstream file(path);
     if (!file.is_open()) {
@@ -30,12 +18,15 @@ void Lac::training(string path) {
         // vector<float> values = splitString(line);
         vector<int> values = splitString(line);
 
+        // for (int i = 0; i < values.size() - 1; i++) {
         for (int i = 0; i < values.size() - 1; i += 2) {
             int naipe = values[i];
             int carta = values[i + 1];
             int indice = (naipe - 1) * 13 + (carta - 1);
 
             pair<int, int> feature((i + 2) / 2, indice);
+
+            // pair<int, int> feature((i + 1), values[i]);
 
             if (features.find(feature) != features.end()) {
                 features[feature].insert(j);
@@ -77,33 +68,47 @@ float Lac::testing(string path) {
 
     while (getline(file, line)) {
         double result[classes.size()] = {0};
+        double totalSupport = 0;
 
-        // vector<float> values = splitString(line);
         vector<int> values = splitString(line);
         vector<pair<int, int>> lineFeatures;
-        // vector<pair<int, float>> lineFeatures;
 
+        // for (int i = 0; i < values.size() - 1; i++) {
         for (int i = 0; i < values.size() - 1; i += 2) {
             int naipe = values[i];
             int carta = values[i + 1];
             int indice = (naipe - 1) * 13 + (carta - 1);
 
             pair<int, int> feature((i + 2) / 2, indice);
+            // pair<int, int> feature((i + 1), values[i]);
 
             if (features.find(feature) != features.end()) {
                 lineFeatures.push_back(feature);
             }
-
-            if (i == values.size() - 1)
-                break;
         }
 
-        int n = 10;
+        // check if the line is 70% similar to any other line that was already classified
+        pair<int, double> similarity = checkSimilarity(lineFeatures);
+
+        if (similarity.second >= THRESHOLD && similarity.first != -1) {
+            // cout << "Usando cache" << endl;
+            // cout << "Line: " << j << " Similaridade: " << similarity.second << " Classe: " << similarity.first << endl;
+
+            int classification = similarity.first;
+            j++;
+            outFile << (j - 1) << "," << classification << endl;
+            if (similarity.first == values.back()) {
+                acertos++;
+            } else
+                erros++;
+            continue;
+        }
+
+        int n = lineFeatures.size();
 
         vector<unordered_set<pair<int, int>, pairHash>> combinacoesFeatures = {};
 
-        // Acessando as linhas de cada tupla: 1 a 1, 2 a 2 e assim
-        // por diante ate o tamanho maximo da tupla, 11.
+        // Acessando as linhas de cada tupla: 1 a 1, 2 a 2 e assim por diante ate o tamanho maximo da tupla
         bool shouldStop = false;
         for (int q = 1; q <= n; q++) {
             if (shouldStop)
@@ -111,106 +116,42 @@ float Lac::testing(string path) {
 
             combinacoesFeatures = combo(lineFeatures, q);
 
-            int qtdPoucasIntersecoes = 0;
+            // Criar threads para processamento paralelo
+            int numThreads = combinacoesFeatures.size();
+            pthread_t threads[numThreads];
+            ThreadData threadData[numThreads];
+            int chunkSize = combinacoesFeatures.size() / numThreads;
 
-            for (int r = 0; r < combinacoesFeatures.size(); r++) {
-                if (cacheResults.find(combinacoesFeatures[r]) != cacheResults.end()) {
-                    for (auto c : classes) {
-                        result[c.first] += cacheResults[combinacoesFeatures[r]][c.first];
-                    }
-                    continue;
-                }
+            for (int t = 0; t < numThreads; t++) {
+                threadData[t].combinacoesFeatures = &combinacoesFeatures;
+                threadData[t].features = &features;
+                threadData[t].classes = &classes;
+                threadData[t].start = t * chunkSize;
+                threadData[t].end = (t == numThreads - 1) ? combinacoesFeatures.size() : (t + 1) * chunkSize;
+                threadData[t].result = result;
+                threadData[t].cacheResults = &cacheResults;
 
-                // vector para guardar as combinacoes das linhas das features, 1 a 1, 2 a 2.....
-                vector<unordered_set<int>> combinacoesLinhas = {};
+                pthread_create(&threads[t], NULL, threadIntersecao, (void*)&threadData[t]);
+            }
 
-                for (auto c : combinacoesFeatures[r]) {
-                    // pair<int, float> key = pair(c.first, c.second);
-                    pair<int, int> key = pair(c.first, c.second);
-                    combinacoesLinhas.push_back(features[key]);
-                }
-
-                // fazendo a interseção das combinacoes 1 a 1, 2 a 2.....
-
-                unordered_set<int> intersectionPerTupla = {};
-
-                if (combinacoesFeatures[r].size() == 1) {
-                    intersectionPerTupla = combinacoesLinhas[0];
-                } else {
-                    intersectionPerTupla = intersectionAll(combinacoesLinhas);
-                    intersectionCounter++;
-
-                    if (intersectionPerTupla.size() <= INTERSECTION_LIMIT) {
-                        qtdPoucasIntersecoes++;
-                        shouldStop = true;
-                        if (qtdPoucasIntersecoes < 2)
-                            continue;
-                        else
-                            break;
-                    }
-                }
-
-                // std::cout << "Cache size: " << cache.size() << std::endl;
-
-                // cout << "Intersec: " << intersectionCounter << endl;
-                // cout << "Cache: " << cacheUsingCounter << endl;
-                for (auto c : classes) {
-                    unordered_set<int> intersecao;
-                    for (const auto &elem : intersectionPerTupla) {
-                        if (c.second.find(elem) != c.second.end()) {
-                            intersecao.insert(elem);
-                        }
-                    }
-                    int confident = intersecao.size();
-
-                    // if (confident > MIN_INTERSECTION) {
-                    //     double support = (double)confident / (double)features.size();
-                    //     cacheResults[combinacoesFeatures[r]][c.first] = support;
-                    //     result[c.first] += support;
-                    // }
-
-                    //  if (confident >= MIN_INTERSECTIONS) {
-                    //      break;
-                    //  }
-
-                    if (confident > MIN_SUPORTE) {
-                        double support = (double)confident / (double)features.size();
-                        cacheResults[combinacoesFeatures[r]][c.first] = support;
-                        result[c.first] += support;
-                    }
-                }
-
-                // for (auto k : combinacoesFeatures[r]) {
-                //     cout << k.first << " " << k.second << ", ";
-                // }
-                // cout << " ===> ";
-                // for (int k = 0; k < 10; k++) {
-                //     cout << cacheResults[combinacoesFeatures[r]][k] << " ";
-                // }
-                // cout << endl;
-
-                // unordered_set<pair<int, int>, pairHash> teste;
-                // teste.insert(pair(3, 37));
-                // teste.insert(pair(1, 29));
-                // if (cacheResults.find(teste) != cacheResults.end()) {
-                //     cout << "Encontrou" << endl;
-                // }
+            // Aguardar todas as threads terminarem
+            for (int t = 0; t < numThreads; t++) {
+                pthread_join(threads[t], NULL);
             }
         }
 
-        // cout << "j: " << j << endl;
         j++;
 
         int classification = findMaxIndex(result, classes.size());
 
-        // cout << "Classificação: " << classification << " Valor: " << result[classification] << " Correta: " << values.back() << endl;
-
         outFile << (j - 1) << "," << classification << endl;
 
-        if (classification == values.back())
+        if (classification == values.back()) {
             acertos++;
-        else
+            generateLSH(lineFeatures, classification);
+        } else {
             erros++;
+        }
     }
 
     cout << "Acertos: " << acertos << " Erros: " << erros << endl;
@@ -221,36 +162,23 @@ float Lac::testing(string path) {
     outFile << "Acertos(accuracy): " << acertos << " e Erros(loss): " << erros;
 
     file.close();
+    outFile.close();
 
     return ((float)acertos / (float)(acertos + erros));
 }
 
-// vector<float> Lac::splitString(string line) {
 vector<int> Lac::splitString(string line) {
-    // vector<float> result;
     vector<int> result;
     string delimiter = ",";
     size_t pos = 0;
     string token;
     while ((pos = line.find(delimiter)) != string::npos) {
         token = line.substr(0, pos);
-        // result.push_back(stof(token));
         result.push_back(stoi(token));
         line.erase(0, pos + delimiter.length());
     }
-    // result.push_back(stof(line));
     result.push_back(stoi(line));
     return result;
-}
-
-// gets
-
-unordered_map<pair<int, int>, unordered_set<int>, pairHash> Lac::getFeatures() {
-    return features;
-}
-
-unordered_map<int, unordered_set<int>> Lac::getClasses() {
-    return classes;
 }
 
 // interseção entre uma lista de unordered_set
@@ -261,32 +189,27 @@ unordered_set<int> Lac::intersectionAll(vector<unordered_set<int>> lists) {
     unordered_set<int> result = lists[0];
     for (size_t i = 1; i < lists.size(); ++i) {
         unordered_set<int> temp;
-        for (const auto &elem : result) {
+        for (const auto& elem : result) {
             if (lists[i].find(elem) != lists[i].end()) {
                 temp.insert(elem);
             }
         }
-        result = temp;
+        if (temp.empty()) {
+            return {};
+        }
+
+        result = move(temp);
     }
+
     return result;
 }
 
-// interseção entre dois unordered_set
-int Lac::intersection(unordered_set<int> first, unordered_set<int> second) {
-    unordered_set<int> intersection;
-    for (const auto &elem : first) {
-        if (second.find(elem) != second.end()) {
-            intersection.insert(elem);
-        }
-    }
-    return intersection.size();
-}
-
 // Acha o indice do maior valor dentro do vetor resultado
-int Lac::findMaxIndex(double *arr, int size) {
+int Lac::findMaxIndex(double* arr, int size) {
     int maxIndex = 0;
     double maxValue = arr[0];
 
+    // cout << "---------------------------------" << endl;
     for (int i = 0; i < size; ++i) {
         // cout << "Classe: " << i << " Valor: " << arr[i] << endl;
         if (arr[i] > maxValue) {
@@ -294,6 +217,7 @@ int Lac::findMaxIndex(double *arr, int size) {
             maxIndex = i;
         }
     }
+    // cout << "---------------------------------" << endl;
 
     return maxIndex;
 }
@@ -301,9 +225,9 @@ int Lac::findMaxIndex(double *arr, int size) {
 void Lac::imprimirFeatures() {
     for (auto v : features) {
         cout << "Feature: " << std::fixed << std::setprecision(2) << "(" << v.first.first << "," << std::setprecision(2) << v.first.second << ")";
-        // for (auto i : v.second) {
-        //     cout << i << " ";
-        // }
+        for (auto i : v.second) {
+            cout << i << " ";
+        }
         cout << endl;
     }
 }
@@ -318,27 +242,12 @@ void Lac::imprimirClasses() {
     }
 }
 
-// void Lac::pretty_print(const vector<pair<int, float>> &c, int combo) {
-void Lac::pretty_print(const vector<pair<int, int>> &c, int combo) {
-    int n = c.size();
-    for (int i = 0; i < n; i++) {
-        if ((combo >> i) & 1)
-            cout << "(" << c[i].first << ", " << c[i].second << ") ";
-    }
-    cout << endl;
-}
-
-// vector<vector<pair<int, float>>> Lac::combo(const vector<pair<int, float>> &c, int k) {
-vector<unordered_set<pair<int, int>, pairHash>> Lac::combo(const vector<pair<int, int>> &c, int k) {
+vector<unordered_set<pair<int, int>, pairHash>> Lac::combo(const vector<pair<int, int>>& c, int k) {
     int n = c.size();
     int combo = (1 << k) - 1;
-    // vector<vector<pair<int, float>>> result = {};
     vector<unordered_set<pair<int, int>, pairHash>> result = {};
     while ((combo < 1 << n)) {
-        // pretty_print(c, combo);
-
         unordered_set<pair<int, int>, pairHash> currentCombo;
-        // vector<pair<int, float>> currentCombo;
         for (int i = 0; i < n; i++) {
             if (((combo >> i) & 1))
                 currentCombo.insert(c[i]);
@@ -357,4 +266,117 @@ vector<unordered_set<pair<int, int>, pairHash>> Lac::combo(const vector<pair<int
     }
 
     return result;
+}
+
+void Lac::generateLSH(vector<pair<int, int>> lineFeatures, int classBucket) {
+    lshBuckets.insert(pair<vector<pair<int, int>>, int>(lineFeatures, classBucket));
+}
+
+pair<int, double> Lac::checkSimilarity(vector<pair<int, int>> lineFeatures) {
+    pair<int, double> result = pair<int, double>(-1, 0);
+    // find the bucket that has the most similar features
+    for (const auto lshBucket : lshBuckets) {
+        double similarity = cosineSimilarity(lineFeatures, lshBucket.first);
+        // double similarity = jaccardSimilarity(lineFeatures, lshBucket.first);
+        // cout << "similarity: " << similarity << endl;
+        if (similarity >= THRESHOLD && similarity > result.second) {
+            result = pair<int, double>(lshBucket.second, similarity);
+        }
+    }
+
+    if (result.first != -1)
+        generateLSH(lineFeatures, result.first);
+    return result;
+}
+
+double Lac::cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2) {
+    double dotProduct = 0, magnitude1 = 0, magnitude2 = 0;
+
+    for (int i = 0; i < set1.size(); i++) {
+        dotProduct += set1[i].second * set2[i].second;
+        magnitude1 += set1[i].second * set1[i].second;
+        magnitude2 += set2[i].second * set2[i].second;
+    }
+
+    magnitude1 = sqrt(magnitude1);
+    magnitude2 = sqrt(magnitude2);
+
+    return dotProduct / (magnitude1 * magnitude2);
+}
+
+double Lac::jaccardSimilarity(const vector<pair<int, int>>& vec1, const vector<pair<int, int>>& vec2) {
+    // genereate set from vector of integers
+    unordered_set<int> set1;
+    for (const auto& elem : vec1) {
+        set1.insert(elem.second);
+    }
+
+    unordered_set<int> set2;
+    for (const auto& elem : vec2) {
+        set2.insert(elem.second);
+    }
+
+    int intSize = intersectionSize(set1, set2);
+    int unionSize = set1.size() + set2.size() - intSize;
+    return static_cast<double>(intSize) / unionSize;
+}
+
+int Lac::intersectionSize(const unordered_set<int>& set1, const unordered_set<int>& set2) {
+    int count = 0;
+    for (const auto& item : set1) {
+        if (set2.find(item) != set2.end()) {
+            count++;
+        }
+    }
+    return count;
+}
+
+void* Lac::threadIntersecao(void* arg) {
+    ThreadData* data = (ThreadData*)arg;
+
+    for (int r = data->start; r < data->end; r++) {
+        unordered_set<pair<int, int>, pairHashSimilarity> combinacoesCacheSet(data->combinacoesFeatures->at(r).begin(), data->combinacoesFeatures->at(r).end());
+
+        int i = 0;
+        if (data->cacheResults->find(combinacoesCacheSet) != data->cacheResults->end()) {
+            for (auto c : data->cacheResults->at(combinacoesCacheSet)) {
+                // cout << "ENTREIIIII " << c << endl;
+                data->result[i++] += c;
+            }
+            continue;
+        }
+
+        vector<unordered_set<int>> combinacoesLinhas;
+        for (auto c : data->combinacoesFeatures->at(r)) {
+            combinacoesLinhas.push_back(data->features->at(c));
+        }
+
+        unordered_set<int> intersectionPerTupla = {};
+
+        if (data->combinacoesFeatures->at(r).size() == 1) {
+            intersectionPerTupla = combinacoesLinhas[0];
+        } else {
+            intersectionPerTupla = intersectionAll(combinacoesLinhas);
+            if (intersectionPerTupla.size() <= INTERSECTION_LIMIT)
+                continue;
+        }
+
+        for (int i = 0; i < data->classes->size(); i++) {
+            unordered_set<int> intersecao;
+            for (const auto& elem : intersectionPerTupla) {
+                if (data->classes->at(i).find(elem) != data->classes->at(i).end()) {
+                    intersecao.insert(elem);
+                }
+            }
+            int confident = intersecao.size();
+            if (confident > MIN_SUPORTE) {
+                double support = (double)confident / (double)data->features->size();
+
+                data->result[i] += (support * data->combinacoesFeatures->size());
+                data->cacheResults->operator[](combinacoesCacheSet)[i] = (support * data->combinacoesFeatures->size());
+            }
+        }
+    }
+
+    return NULL;
 }

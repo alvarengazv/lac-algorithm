@@ -15,7 +15,7 @@ def find_similar_lines(input_lines, target_similarity, count):
         random_index = random.randint(0, len(input_lines) - 1)
         if random_index in used_indices:
             continue
-        
+
         reference_line = input_lines[random_index]
         for i, line in enumerate(input_lines):
             if i in used_indices:
@@ -26,7 +26,7 @@ def find_similar_lines(input_lines, target_similarity, count):
                 used_indices.add(i)
                 if len(selected_lines) >= count:
                     break
-    
+
     return selected_lines
 
 def main(input_filename, output_filename):
