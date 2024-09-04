@@ -124,23 +124,6 @@ float Lac::testing(string path) {
 
             combinationsFeatures = combinations(lineFeatures, q);
 
-            // pair<int, double> similarity = checkSimilarity(lineFeatures);
-
-            // if (similarity.second >= THRESHOLD && similarity.first != -1) {
-            //     int classification = similarity.first;
-
-            //     j++;
-
-            //     outFile << (j - 1) << "," << classification << endl;
-
-            //     if (similarity.first == values.back()) {
-            //         accuracy++;
-            //         populateCache(lineFeatures, similarity.first);
-            //     } else
-            //         loss++;
-            //     continue;
-            // }
-
             // Criar threads para processamento paralelo
             int numThreads = 5;
             pthread_t threads[numThreads];
@@ -182,7 +165,8 @@ float Lac::testing(string path) {
     cout << "Acertos: " << accuracy << " Erros: " << loss << endl;
 
     // Porcentagem de acertos
-    cout << "Porcentagem de acertos: " << (accuracy * 100) / (accuracy + loss) << "%" << endl;
+    //
+    cout << "Porcentagem de acertos: " << (double)(accuracy * 100) / (accuracy + loss) << "%" << endl;
 
     outFile << "Acertos(accuracy): " << accuracy << " e Erros(loss): " << loss;
 
@@ -330,7 +314,7 @@ void* Lac::threadIntersection(void* arg) {
             }
             pthread_mutex_unlock(&mutex);
             continue;
-        } else if (USE_COSINE_SIMILARITY) {
+        } else if (USE_COSINE_SIMILARITY && data->similarityCache->size() > 0 && combinacoesCacheVec.size() > 1) {
             pthread_mutex_lock(&mutex);
             pair<vector<double>, double> similarity = checkSimilarity(combinacoesCacheVec);
             if (similarity.second >= THRESHOLD && similarity.first[0] != -1) {

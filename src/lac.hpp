@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 // Pra usar:
 // pthread.h
+// pthread_mutex_t
 // cmath
 // fstream
 // iostream
@@ -16,7 +17,7 @@
 #define MIN_SUPORTE 0
 #define DECREASE_CARDINALITY 1
 #define USE_COSINE_SIMILARITY 1
-#define THRESHOLD 0.85
+#define THRESHOLD 0.92
 #define MAX_COMBS 3
 
 using namespace std;
@@ -41,22 +42,6 @@ struct pairHash {
         size_t retval = hash<T>()(rhs.first);
         hashCombine(retval, rhs.second);
         return retval;
-    }
-};
-
-struct unorderedSetPairHash {
-    size_t operator()(const unordered_set<pair<int, int>, pairHashSimilarity>& v) const {
-        size_t seed = 0;
-        for (const auto& p : v) {
-            seed ^= pairHashSimilarity{}(p) + 0x9e3779b9;
-        }
-        return seed;
-    }
-};
-
-struct unorderedSetPairEqual {
-    bool operator()(const unordered_set<pair<int, int>, pairHashSimilarity>& lhs, const unordered_set<pair<int, int>, pairHashSimilarity>& rhs) const {
-        return lhs == rhs;
     }
 };
 
