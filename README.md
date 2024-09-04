@@ -403,6 +403,14 @@ Por fim, o último teste realizado foi utilizando ambos o cache de similaridade 
 
 ## 🏁 Conclusão
 
+O desenvolvimento e aprimoramento do algoritmo LAC, como apresentado neste trabalho, demonstram a eficácia e a flexibilidade dessa abordagem na resolução de problemas complexos de classificação. As melhorias implementadas, incluindo a utilização de técnicas de multithreading e otimizações específicas, permitiram um ganho significativo de desempenho, tornando o algoritmo mais eficiente em termos de tempo de execução e utilização de recursos.
+
+Além disso, a aplicação de um cache de similaridade e a escolha criteriosa dos métodos de cálculo, como a similaridade de cossenos, reforçam a robustez do LAC em diferentes cenários de classificação, especialmente em conjuntos de dados de alta dimensionalidade e com características complexas.
+
+Os resultados obtidos confirmam que o LAC, aliado às otimizações propostas, é uma ferramenta poderosa para a classificação de grandes volumes de dados, com potencial para ser aplicado em diversas áreas, desde a mineração de dados até o aprendizado de máquina. O uso de cinco threads, conforme determinado pelos testes, mostrou-se a escolha mais eficaz, equilibrando a carga de trabalho e maximizando a eficiência do algoritmo.
+
+Este trabalho abre portas para futuras pesquisas e melhorias adicionais, como a exploração de novas técnicas de otimização e o estudo do impacto de diferentes estratégias de paralelismo. A contínua evolução do LAC poderá contribuir para sua aplicação em contextos ainda mais desafiadores, mantendo sua relevância no campo da ciência de dados.
+
 <div  align="justify">
 
 </div>
