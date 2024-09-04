@@ -382,19 +382,16 @@ Melhora de 20% na acurácia, com perda no tempo de execução.
 
 Teste 02 -> Com o Cache de Similaridade e com Redução de Cardinalidade:  
 
+Por fim, o último teste realizado foi utilizando ambos o cache de similaridade do cosseno e a redução de cardinalidade e, como resultado, temos:
+
+
 
 <div align='center'>
   <img src='./images/cossenoComReducao.jpeg' alt='Cache de Similaridade com Redução de Cardinalidade' width='600px'>
   <p>Cache de Similaridade com Redução de Cardinalidade</p>
 </div>
-Melhora na acurácia e ganho no tempo de execução.
 
-Por fim, o último teste realizado foi utilizando ambos o cache de similaridade do cosseno e a redução de cardinalidade e, como resultado, temos:
-
-<div align='center'>
-  <img src='./images/todasOtimizacoes.png' alt='Cache de Similaridade com Redução de Cardinalidade' width='600px'>
-  <p>Todas otimizações implementadas</p>
-</div>
+Obtendo, assim, melhora na acurácia e ganho de 98,11% no tempo de execução.
 
 
 </div>
