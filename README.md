@@ -21,7 +21,7 @@ CEFET-MG Campus V <br>
 <details>
   <summary>
   <b style='font-size: 15px'>
-    📑 Sumáriúteis para a compilação e execução do programa:o
+    📑 Sumário
   </b>
   </summary>
   <ol>
