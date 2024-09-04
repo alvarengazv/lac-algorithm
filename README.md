@@ -350,6 +350,28 @@ Esta estrutura de diretórios facilita a organização do projeto e a localizaç
   ### Configurações dos Testes
   Primeiramente, teve-se a implementação padrão do algoritmo LAC, sem nenhuma otimização, como base para os testes realizados. Em seguida, foram implementadas as otimizações propostas, uma a uma, a fim de avaliar o impacto de cada uma delas no desempenho do algoritmo. 
 
+Posteriormente, decidimos fazer a implementação do cache de interseções, com o objetivo de melhorar a eficiência do algortimo ao parar de fazer interseções repetidas. Após os testes, pode-se afirmar que sua inserção no projeto foi benéfica, pois reduz em grande quantidade o número total de interseções feitas. Uma curiosidade que foi observada e importante de ser destacada é que esse cache de interseções tem uma performance melhor na medida que a base a ser classificada é maior, já que com isso o número de interseções repetidas a serem "retiradas" é maior.
+
+Depois disso e ainda não conformados com o resultado obtido, resolvemos implementar a redução de cardinalidade. A redução de cardinalidade tem como objetivo diminuir a quantidade de características únicas que o algoritmo precisa considerar, o que pode levar a economias significativas de memória e a melhorias de desempenho. Como resultado, obtivemos:
+
+por a imagem
+
+Ainda não satisfeitos com o resultado, implementamos o cache de similaridade do cosseno. Essa métrica é utilizada para medir a similaridade entre dois vetores, baseada no cosseno do ângulo entre eles. Essa medida avalia a orientação dos vetores no espaço multidimensional, ignorando seus comprimentos. O valor da similaridade do cosseno varia de -1 a 1, onde 1 indica que os vetores são perfeitamente semelhantes, 0 indica que são ortogonais (sem similaridade), e -1 indica que são opostos.
+
+No nosso trabalho, a similaridade do cosseno é utilizada para comparar a similaridade entre características extraídas pelo algoritmo LAC. O objetivo é melhorar a eficiência do algoritmo ao armazenar e reutilizar resultados de similaridade através de técnicas de cache. Isso ajuda a reduzir o tempo de computação ao evitar recalcular a similaridade entre os mesmos pares de vetores repetidamente, especialmente em grandes volumes de dados.
+
+Para a validação dessa implementação, foram feitos dois testes:
+
+Teste 01 -> Com o Cache de Similaridade e sem Redução de Cardinalidade: Nesse teste, o resultado obtido se encontra na imagem abaixo:
+
+(colocar a diferença em % pro outro de cima)
+
+Teste 02 -> Com o Cache de Similaridade e com Redução de Cardinalidade:  
+
+Por fim, o último teste realizado foi utilizando ambos o cache de similaridade do cosseno e a redução de cardinalidade e, como resultado, temos:
+
+iamgem aqui gente to apssando makl
+
 </div>
 
 <p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
