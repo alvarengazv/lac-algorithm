@@ -358,7 +358,11 @@ Posteriormente, decidimos fazer a implementação do cache de interseções, com
 
 Depois disso e ainda não conformados com o resultado obtido, resolvemos implementar a redução de cardinalidade. A redução de cardinalidade tem como objetivo diminuir a quantidade de características únicas que o algoritmo precisa considerar, o que pode levar a economias significativas de memória e a melhorias de desempenho. Como resultado, obtivemos:
 
-por a imagem
+
+<div align='center'>
+  <img src='./images/reducaoCardinalidade.jpeg' alt='Resultados com redução de cardinalidade' width='600px'>
+  <p>Resultados com redução de cardinalidade</p>
+</div>
 
 Ainda não satisfeitos com o resultado, implementamos o cache de similaridade do cosseno. Essa métrica é utilizada para medir a similaridade entre dois vetores, baseada no cosseno do ângulo entre eles. Essa medida avalia a orientação dos vetores no espaço multidimensional, ignorando seus comprimentos. O valor da similaridade do cosseno varia de -1 a 1, onde 1 indica que os vetores são perfeitamente semelhantes, 0 indica que são ortogonais (sem similaridade), e -1 indica que são opostos.
 
@@ -368,13 +372,30 @@ Para a validação dessa implementação, foram feitos dois testes:
 
 Teste 01 -> Com o Cache de Similaridade e sem Redução de Cardinalidade: Nesse teste, o resultado obtido se encontra na imagem abaixo:
 
-(colocar a diferença em % pro outro de cima)
+
+<div align='center'>
+  <img src='./images/cossenoSemReducao.jpeg' alt='Cache de Similaridade sem Redução de Cardinalidade' width='600px'>
+  <p>Cache de Similaridade sem Redução de Cardinalidade</p>
+</div>
+
+Melhora de 20% na acurácia, com perda no tempo de execução.
 
 Teste 02 -> Com o Cache de Similaridade e com Redução de Cardinalidade:  
 
+
+<div align='center'>
+  <img src='./images/cossenoComReducao.jpeg' alt='Cache de Similaridade com Redução de Cardinalidade' width='600px'>
+  <p>Cache de Similaridade com Redução de Cardinalidade</p>
+</div>
+Melhora na acurácia e ganho no tempo de execução.
+
 Por fim, o último teste realizado foi utilizando ambos o cache de similaridade do cosseno e a redução de cardinalidade e, como resultado, temos:
 
-iamgem aqui gente to apssando makl
+<div align='center'>
+  <img src='./images/todasOtimizacoes.png' alt='Cache de Similaridade com Redução de Cardinalidade' width='600px'>
+  <p>Todas otimizações implementadas</p>
+</div>
+
 
 </div>
 
