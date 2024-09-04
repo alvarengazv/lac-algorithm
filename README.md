@@ -391,7 +391,7 @@ Por fim, o último teste realizado foi utilizando ambos o cache de similaridade 
   <p>Cache de Similaridade com Redução de Cardinalidade</p>
 </div>
 
-Obtendo, assim, melhora na acurácia e ganho de 98,11% no tempo de execução.
+Obtivemos, assim, uma melhora na acurácia, com um ganho de 98,11% no tempo de execução em relação à versão sem redução de cardinalidade e 95,13% em relação à versão sem a implementação da similaridade de cosseno e redução de cardinalidade, constituindo, dessa forma, a melhor versão apresentada pelo algoritmo.
 
 
 </div>
