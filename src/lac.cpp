@@ -1,12 +1,12 @@
 #include "lac.hpp"
 
 int Lac::INTERSECTION_LIMIT = 0;
+unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> Lac::similarityCache;
 
 // Construtor da classe
-Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes, bool decreaseCardinality) {
+Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes) {
     this->features = features;
     this->classes = classes;
-    this->decreaseCardinality = decreaseCardinality;
 }
 
 // Treinamento do algoritmo
@@ -22,7 +22,7 @@ void Lac::training(string path) {
     while (getline(file, line)) {
         vector<int> values = splitString(line);
 
-        if (decreaseCardinality) {
+        if (DECREASE_CARDINALITY) {
             for (int i = 0; i < values.size() - 1; i += 2) {
                 int value1 = values[i];
                 int value2 = values[i + 1];
@@ -90,7 +90,7 @@ float Lac::testing(string path) {
         vector<int> values = splitString(line);
         vector<pair<int, int>> lineFeatures;
 
-        if (decreaseCardinality) {
+        if (DECREASE_CARDINALITY) {
             for (int i = 0; i < values.size() - 1; i += 2) {
                 int value1 = values[i];
                 int value2 = values[i + 1];
@@ -112,34 +112,34 @@ float Lac::testing(string path) {
             }
         }
 
-        pair<int, double> similarity = checkSimilarity(lineFeatures);
-
-        if (similarity.second >= THRESHOLD && similarity.first != -1) {
-            int classification = similarity.first;
-
-            j++;
-
-            outFile << (j - 1) << "," << classification << endl;
-
-            if (similarity.first == values.back()) {
-                accuracy++;
-                populateCache(lineFeatures, similarity.first);
-            } else
-                loss++;
-            continue;
-        }
-
         int n = lineFeatures.size();
 
         vector<unordered_set<pair<int, int>, pairHash>> combinationsFeatures = {};
 
         // Acessando as linhas de cada tupla: 1 a 1, 2 a 2 e assim por diante ate o tamanho maximo da tupla
         bool shouldStop = false;
-        for (int q = 1; q <= n; q++) {
+        for (int q = 1; q <= MAX_COMBS; q++) {
             if (shouldStop)
                 break;
 
             combinationsFeatures = combinations(lineFeatures, q);
+
+            // pair<int, double> similarity = checkSimilarity(lineFeatures);
+
+            // if (similarity.second >= THRESHOLD && similarity.first != -1) {
+            //     int classification = similarity.first;
+
+            //     j++;
+
+            //     outFile << (j - 1) << "," << classification << endl;
+
+            //     if (similarity.first == values.back()) {
+            //         accuracy++;
+            //         populateCache(lineFeatures, similarity.first);
+            //     } else
+            //         loss++;
+            //     continue;
+            // }
 
             // Criar threads para processamento paralelo
             int numThreads = 5;
@@ -155,6 +155,7 @@ float Lac::testing(string path) {
                 threadData[t].end = (t == numThreads - 1) ? combinationsFeatures.size() : (t + 1) * chunkSize;
                 threadData[t].result = result;
                 threadData[t].shouldStop = &shouldStop;
+                threadData[t].similarityCache = &similarityCache;
 
                 pthread_create(&threads[t], NULL, threadIntersection, (void*)&threadData[t]);
             }
@@ -173,7 +174,6 @@ float Lac::testing(string path) {
 
         if (classification == values.back()) {
             accuracy++;
-            populateCache(lineFeatures, classification);
         } else {
             loss++;
         }
@@ -273,18 +273,26 @@ vector<unordered_set<pair<int, int>, pairHash>> Lac::combinations(const vector<p
 }
 
 // Insere linha de features no cache
-void Lac::populateCache(vector<pair<int, int>> lineFeatures, int classBucket) {
-    similarityCache.insert(pair<vector<pair<int, int>>, int>(lineFeatures, classBucket));
+void Lac::populateCache(cacheKey lineFeatures, cacheValue classesSupport) {
+    similarityCache.insert(pair<vector<pair<int, int>>, vector<double>>(lineFeatures, classesSupport));
 }
 
 // Encontra a linha de features mais similar no cache
-pair<int, double> Lac::checkSimilarity(vector<pair<int, int>> lineFeatures) {
-    pair<int, double> result = pair<int, double>(-1, 0);
+pair<vector<double>, double> Lac::checkSimilarity(cacheKey lineFeatures) {
+    pair<vector<double>, double> result = pair<vector<double>, double>({-1}, 0);
 
-    for (const auto lineResult : similarityCache) {
-        double similarity = cosineSimilarity(lineFeatures, lineResult.first);
+    for (const auto combResult : similarityCache) {
+        if (combResult.first.size() != lineFeatures.size()) {
+            continue;
+        }
+
+        double similarity = cosineSimilarity(lineFeatures, combResult.first);
+        if (similarity == 1) {
+            return pair<vector<double>, double>(combResult.second, similarity);
+        }
+
         if (similarity >= THRESHOLD && similarity > result.second) {
-            result = pair<int, double>(lineResult.second, similarity);
+            result = pair<vector<double>, double>(combResult.second, similarity);
         }
     }
 
@@ -309,10 +317,32 @@ double Lac::cosineSimilarity(const vector<pair<int, int>>& vec1, const vector<pa
 
 // Função que será executada pelas threads
 void* Lac::threadIntersection(void* arg) {
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     ThreadData* data = (ThreadData*)arg;
 
     for (int r = data->start; r < data->end; r++) {
-        unordered_set<pair<int, int>, pairHashSimilarity> combinacoesCacheSet(data->combinationsFeatures->at(r).begin(), data->combinationsFeatures->at(r).end());
+        vector<pair<int, int>> combinacoesCacheVec(data->combinationsFeatures->at(r).begin(), data->combinationsFeatures->at(r).end());
+
+        if (data->similarityCache->find(combinacoesCacheVec) != data->similarityCache->end()) {
+            pthread_mutex_lock(&mutex);
+            for (int i = 0; i < data->classes->size(); i++) {
+                data->result[i] += data->similarityCache->at(combinacoesCacheVec)[i];
+            }
+            pthread_mutex_unlock(&mutex);
+            continue;
+        } else if (USE_COSINE_SIMILARITY) {
+            pthread_mutex_lock(&mutex);
+            pair<vector<double>, double> similarity = checkSimilarity(combinacoesCacheVec);
+            if (similarity.second >= THRESHOLD && similarity.first[0] != -1) {
+                for (int i = 0; i < data->classes->size(); i++) {
+                    data->result[i] += similarity.first[i];
+                }
+
+                pthread_mutex_unlock(&mutex);
+                continue;
+            }
+            pthread_mutex_unlock(&mutex);
+        }
 
         vector<unordered_set<int>> combinationsLines;
         for (auto c : data->combinationsFeatures->at(r)) {
@@ -342,7 +372,18 @@ void* Lac::threadIntersection(void* arg) {
             if (confidence > MIN_SUPORTE) {
                 double support = (double)confidence / (double)data->features->size();
 
+                pthread_mutex_lock(&mutex);
                 data->result[i] += (support);
+                if (USE_COSINE_SIMILARITY) {
+                    if (data->similarityCache->find(combinacoesCacheVec) != data->similarityCache->end()) {
+                        data->similarityCache->at(combinacoesCacheVec).push_back(support);
+                    } else {
+                        vector<double> classSupports = {};
+                        classSupports.push_back(support);
+                        data->similarityCache->insert(pair<vector<pair<int, int>>, vector<double>>(combinacoesCacheVec, classSupports));
+                    }
+                }
+                pthread_mutex_unlock(&mutex);
             }
         }
     }

@@ -14,7 +14,10 @@
 // chrono
 
 #define MIN_SUPORTE 0
-#define THRESHOLD 0.95
+#define DECREASE_CARDINALITY 1
+#define USE_COSINE_SIMILARITY 1
+#define THRESHOLD 0.85
+#define MAX_COMBS 3
 
 using namespace std;
 
@@ -73,13 +76,14 @@ struct vectorPairEqual {
     }
 };
 
-using cacheKey = unordered_set<pair<int, int>, pairHashSimilarity>;
-using cacheValue = double[10];
+using cacheKey = vector<pair<int, int>>;
+using cacheValue = vector<double>;
 
 struct ThreadData {
     vector<unordered_set<pair<int, int>, pairHash>>* combinationsFeatures;
     unordered_map<pair<int, int>, unordered_set<int>, pairHash>* features;
     unordered_map<int, unordered_set<int>>* classes;
+    unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual>* similarityCache;
     bool* shouldStop;
     int start;
     int end;
@@ -90,22 +94,21 @@ class Lac {
    private:
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> features;
     unordered_map<int, unordered_set<int>> classes;
-    bool decreaseCardinality = false;
-    unordered_map<vector<pair<int, int>>, int, vectorPairHash, vectorPairEqual> similarityCache;
 
    public:
-    Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes, bool decreaseCardinality);
+    Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes);
     void training(string path);
     float testing(string path);
     static unordered_set<int> intersectionAll(vector<unordered_set<int>> list);
     int findMaxIndex(double* arr, int size);
     vector<int> splitString(string line);
     vector<unordered_set<pair<int, int>, pairHash>> combinations(const vector<pair<int, int>>& c, int k);
-    void populateCache(vector<pair<int, int>> lineFeatures, int classBucket);
-    pair<int, double> checkSimilarity(vector<pair<int, int>> lineFeatures);
-    double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2);
+    void populateCache(cacheKey lineFeatures, cacheValue classesSupport);
+    static pair<vector<double>, double> checkSimilarity(cacheKey lineFeatures);
+    static double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2);
     static void* threadIntersection(void* arg);
     static int INTERSECTION_LIMIT;
+    static unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> similarityCache;
 };
 
 #endif
