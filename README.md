@@ -107,7 +107,6 @@ CEFET-MG Campus V <br>
   - **8:** Straight Flush (0,01999%)
   - **9:** Royal Flush (0,01999%)
 
-  <!-- Falar sobre a base de treino -->
   Todas as combinações de cartas e possíveis mãos no jogo de pôquer totalizam mais de um milhão de possibilidades. Para o treinamento de nosso algoritmo, foram selecionados 25 mil exemplos da base de dados original de forma a fornecer informações suficientes para que possamos classificar as demais amostras.
 
   Dessa forma, empregando a base do algoritmo LAC [^1] para realizar a classificação desta base de dados, iremos buscar meios de otimizar o procedimento de forma a aprimorar a acurácia obtida e o tempo gasto para classificar toda a base de dados.
@@ -226,8 +225,6 @@ $$
 \sum_{k=1}^{10} C(10,k) = 1023
 $$
 
-  <!-- Conferir somatorio e valor -->
-
   Isso significa que será necessário, na forma padrão da implementação proposta, realizar 1023 processos de interseção entre vetores, sendo que, em alguns casos, se trata de interseções entre nove ou mais vetores. Para cada interseção entre dois ou mais vetores desordenados, que é o caso de nossa aplicação (uma vez que os vetores representam linhas que são dispostas de maneira não ordenada na tabela de features), o custo computacional é dado por $\Theta(n_{1} \cdot n_{2} \cdot n_{3} \cdots n_{k})$, onde $n$ é o tamanho de cada vetor. Com isso, vemos o quanto esse custo pode se tornar elevado à medida que aumenta a quantidade de elementos a serem intersectados.
 
   #### Quando Realizar Interseções:
@@ -291,6 +288,13 @@ Função codificacao(naipe, valor):
 <div align='justify'>
   Dessa forma, ao reduzir pela metade os dados a serem utilizados durante o processo de análise combinatória, a eficiência do nosso algoritmo teve um grande aumento, visto que será necessário realizar apenas 31 combinações ao invés de 1023, quantidade necessária para a análise de 10 valores. Essa redução, aplicada a todas as linhas do arquivo de teste, tem um grande impacto em todo o procedimento de classificação, sendo essa uma das principais otimizações implementadas.
  
+
+ #### Multhreading
+Uma vez que todos os procedimentos realizados para classificação, mesmo após a implementação de todas as otimizações já citadas, não são dependentes entre si, podemos implementar multithreading em nosso algoritmo, visando a distribuição de tarefas e execução em paralelo. Cada thread pode ser responsável por uma parte específica da análise combinatória e, se necessário, realizar a interseção entre as features. No que diz respeito à análise combinatória e interseção, cada thread pode processar uma parte da análise, permitindo que as tarefas sejam realizadas simultaneamente. A interseção dos resultados pode ser feita pelas threads conforme necessário, garantindo que cada segmento da análise seja tratado de forma eficiente.
+
+É crucial garantir que cada thread termine sua execução antes que o resultado final seja computado. Problemas de assincronia podem surgir se uma thread terminar sua execução antes de outras, o que pode levar a resultados incorretos ou inconsistentes. Portanto, a sincronização entre threads é essencial para evitar condições de corrida e inconsistências nos resultados, que devem ser gerenciadas cuidadosamente para garantir a integridade dos dados.
+
+A implementação de multithreading gerou ótimos resultados, aumentando significativamente a eficiência e a velocidade do algoritmo ao permitir a execução paralela de tarefas.
 
   Por fim, para o 4º Procedimento, a busca por métodos que pudessem otimizá-lo não obteve tantos resultados quanto para o terceiro procedimento. Como apresentado na seção de fundamento teórico, o processo de cálculo de suporte e confiança para a classificação de determinada linha/mão se dá apenas realizando cálculos matemáticos, uma vez que a análise combinatória e interseções já foram realizadas. Sendo assim, ainda que a implementação do sistema de **memória cache** surtisse impacto também nesta fase da aplicação, reduzindo a necessidade de realizá-lo, não houve outra implementação que pudesse otimizá-lo, visto que o custo de realizar cálculos matemáticos tem pouco impacto durante a execução de nosso algoritmo, uma vez que tais instruções possuem custo de execução constante.
 
