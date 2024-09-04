@@ -29,20 +29,20 @@ struct pairHashSimilarity {
 
 template <typename T>
 void hashCombine(size_t& seed, T const& v) {
-    seed ^= std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    seed ^= hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
 struct pairHash {
     template <typename T, typename U>
-    std::size_t operator()(const std::pair<T, U>& rhs) const {
-        size_t retval = std::hash<T>()(rhs.first);
+    size_t operator()(const pair<T, U>& rhs) const {
+        size_t retval = hash<T>()(rhs.first);
         hashCombine(retval, rhs.second);
         return retval;
     }
 };
 
 struct unorderedSetPairHash {
-    size_t operator()(const std::unordered_set<std::pair<int, int>, pairHashSimilarity>& v) const {
+    size_t operator()(const unordered_set<pair<int, int>, pairHashSimilarity>& v) const {
         size_t seed = 0;
         for (const auto& p : v) {
             seed ^= pairHashSimilarity{}(p) + 0x9e3779b9;
@@ -52,13 +52,13 @@ struct unorderedSetPairHash {
 };
 
 struct unorderedSetPairEqual {
-    bool operator()(const std::unordered_set<std::pair<int, int>, pairHashSimilarity>& lhs, const std::unordered_set<std::pair<int, int>, pairHashSimilarity>& rhs) const {
+    bool operator()(const unordered_set<pair<int, int>, pairHashSimilarity>& lhs, const unordered_set<pair<int, int>, pairHashSimilarity>& rhs) const {
         return lhs == rhs;
     }
 };
 
 struct vectorPairHash {
-    size_t operator()(const std::vector<std::pair<int, int>>& v) const {
+    size_t operator()(const vector<pair<int, int>>& v) const {
         size_t seed = 0;
         for (const auto& p : v) {
             seed ^= pairHash{}(p) + 0x9e3779b9;
@@ -68,12 +68,12 @@ struct vectorPairHash {
 };
 
 struct vectorPairEqual {
-    bool operator()(const std::vector<std::pair<int, int>>& lhs, const std::vector<std::pair<int, int>>& rhs) const {
+    bool operator()(const vector<pair<int, int>>& lhs, const vector<pair<int, int>>& rhs) const {
         return lhs == rhs;
     }
 };
 
-using cacheKey = std::unordered_set<std::pair<int, int>, pairHashSimilarity>;
+using cacheKey = unordered_set<pair<int, int>, pairHashSimilarity>;
 using cacheValue = double[10];
 
 struct ThreadData {
@@ -91,18 +91,15 @@ class Lac {
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> features;
     unordered_map<int, unordered_set<int>> classes;
     bool decreaseCardinality = false;
-    std::unordered_map<vector<pair<int, int>>, int, vectorPairHash, vectorPairEqual> similarityCache;
+    unordered_map<vector<pair<int, int>>, int, vectorPairHash, vectorPairEqual> similarityCache;
 
    public:
     Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes, bool decreaseCardinality);
     void training(string path);
     float testing(string path);
-    int intersection(unordered_set<pair<int, int>, pairHash> first, unordered_set<pair<int, int>, pairHash> second);
     static unordered_set<int> intersectionAll(vector<unordered_set<int>> list);
     int findMaxIndex(double* arr, int size);
     vector<int> splitString(string line);
-    unordered_map<pair<int, int>, unordered_set<int>, pairHash> getFeatures();
-    unordered_map<int, unordered_set<int>> getClasses();
     vector<unordered_set<pair<int, int>, pairHash>> combinations(const vector<pair<int, int>>& c, int k);
     void populateCache(vector<pair<int, int>> lineFeatures, int classBucket);
     pair<int, double> checkSimilarity(vector<pair<int, int>> lineFeatures);
