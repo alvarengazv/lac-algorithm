@@ -154,6 +154,7 @@ float Lac::testing(string path) {
                 threadData[t].start = t * chunkSize;
                 threadData[t].end = (t == numThreads - 1) ? combinationsFeatures.size() : (t + 1) * chunkSize;
                 threadData[t].result = result;
+                threadData[t].shouldStop = &shouldStop;
 
                 pthread_create(&threads[t], NULL, threadIntersection, (void*)&threadData[t]);
             }
@@ -325,6 +326,7 @@ void* Lac::threadIntersection(void* arg) {
         } else {
             intersectionPerTuple = intersectionAll(combinationsLines);
             if (intersectionPerTuple.size() <= INTERSECTION_LIMIT) {
+                *(data->shouldStop) = true;
                 continue;
             }
         }

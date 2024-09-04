@@ -80,6 +80,7 @@ struct ThreadData {
     vector<unordered_set<pair<int, int>, pairHash>>* combinationsFeatures;
     unordered_map<pair<int, int>, unordered_set<int>, pairHash>* features;
     unordered_map<int, unordered_set<int>>* classes;
+    bool* shouldStop;
     int start;
     int end;
     double* result;
