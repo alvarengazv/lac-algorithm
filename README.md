@@ -81,8 +81,8 @@ CEFET-MG Campus V <br>
       </ul>
     </li>
     <li><a href="#-ambiente-de-compilação-e-execução">🧪 Ambiente de Compilação e Execução</a></li>
-    <li><a href="#-referências">📚 Referências</a></li>
     <li><a href="#-contato">📨 Contato</a></li>
+    <li><a href="#-referencias">📚 Referências</a></li>
   </ol>
 </details>
 
@@ -413,7 +413,13 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
 
 - **`#define MIN_SUPPORT 0`**: definição do suporte mínimo para a classificação de uma linha.
 
-- **`#define THRESHOLD 0.95`**: definição da confiança mínima para a classificação de uma linha.
+- **`#define THRESHOLD 0.92`**: definição da confiança mínima para a classificação de uma linha.
+
+- **`#define MAX_COMBS 3`**: definição do número máximo de combinações de features a serem analisadas.
+
+- **`#define DECREASE_CARDINALITY 1`**: definição para reduzir a cardinalidade das features.
+
+- **`#define USE_COSINE_SIMILARITY 1`**: definição para usar a similaridade de cossenos.
 
 - **`using namespace std`**: definição do namespace padrão da linguagem C++.
 
@@ -432,14 +438,6 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
   - `hashCombine(retval, rhs.second)`: Combina retval com o hash do segundo elemento usando hashCombine.
   - `return retval`: Retorna o valor hash combinado.
 
-- **`struct unorderedSetPairHash`**: Essa estrutura define uma função hash para um unordered_set de pares de inteiros, utilizando `pairHashSimilarity` para calcular os hashes dos elementos dentro do conjunto e combiná-los.
-  - `pairHashSimilarity{}(p)`: Calcula o hash de cada par no `unordered_set`.
-  - `seed ^= ...`: Combina o hash de cada par com o `seed` existente usando XOR e uma constante mágica.
-  - `return seed`: Retorna o hash final para o conjunto.
-
-- **`struct unorderedSetPairEqual`**: Essa estrutura define uma função de igualdade para `unordered_set` de pares de inteiros. Ela compara dois `unordered_set`s para ver se eles são iguais.
-  - `return lhs == rhs`: Retorna verdadeiro se os dois `unordered_set`s forem iguais, falso caso contrário.
-
 - **`struct vectorPairHash`**: Essa estrutura define uma função hash para um `vector` de pares de inteiros, utilizando `pairHash` para calcular os hashes dos elementos no vetor e combiná-los.
   - `pairHash{}(p)`: Calcula o hash de cada par no vetor
   - `seed ^= ...`: Combina o hash de cada par com o `seed` existente usando XOR e uma constante mágica.
@@ -456,6 +454,7 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
   - `vector<unordered_set<pair<int, int>, pairHash>>* combinationsFeatures`: Ponteiro para o vetor de combinações de features.
   - `unordered_map<pair<int, int>, unordered_set<int>, pairHash>* features`: Ponteiro para a tabela de features.
   - `unordered_map<int, unordered_set<int>>* classes`: Ponteiro para a tabela de classes.
+  - `unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual>* similarityCache;`: Ponteiro para a tabela de cache de similaridade.
   - `bool* shouldStop`: Ponteiro para a variável que indica se o processo de análise deve ser interrompido.
   - `int start`: Índice de início do intervalo de combinações.
   - `int end`: Índice de fim do intervalo de combinações.
@@ -465,54 +464,98 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
   - `private`:
     - `unordered_map<pair<int, int>, unordered_set<int>, pairHash> features`: Tabela de features.
     - `unordered_map<int, unordered_set<int>> classes`: Tabela de classes.
-    - `bool decreaseCardinality`: Indica se a cardinalidade será reduzida.
-    - `unordered_map<vector<pair<int, int>>, int, vectorPairHash, vectorPairEqual> similarityCache`: Cache de similaridade.
-  
+
   - `public`:
-    - `Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes, bool decreaseCardinality)`: Construtor da classe Lac.
+    - `Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes)`: Construtor da classe Lac.
     - `void training(string path)`: Função de treinamento do algoritmo LAC.
     - `float testing(string path)`: Função de teste do algoritmo LAC.
     - `static unordered_set<int> intersectionAll(vector<unordered_set<int>> list)`: Função para calcular a interseção de todos os conjuntos em uma lista.
     - `int findMaxIndex(double* arr, int size)`: Função para encontrar o índice do maior valor em um array.
     - `vector<int> splitString(string line)`: Função para dividir uma string em um vetor de inteiros.
     - `vector<unordered_set<pair<int, int>, pairHash>> combinations(const vector<pair<int, int>>& c, int k)`: Função para gerar todas as combinações de tamanho k de um vetor de pares de inteiros.
-    - `void populateCache(vector<pair<int, int>> lineFeatures, int classBucket)`: Função para popular a cache de similaridade.
-    - `pair<int, double> checkSimilarity(vector<pair<int, int>> lineFeatures)`: Função para verificar a similaridade entre duas linhas.
-    - `double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2)`: Função para calcular a similaridade de cossenos entre dois vetores.
+    - `void populateCache(cacheKey lineFeatures, cacheValue classesSupport)`: Função para popular a cache de similaridade.
+    - `static pair<vector<double>, double> checkSimilarity(cacheKey lineFeatures);`: Função para verificar a similaridade entre duas linhas.
+    - `static double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2);`: Função para calcular a similaridade de cossenos entre dois vetores.
     - `static void* threadIntersection(void* arg)`: Função para realizar a interseção em paralelo.
     - `static int INTERSECTION_LIMIT`: Limite de interseção.
+    - `static unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> similarityCache`: Tabela de cache de similaridade.
 
 ### 📝 Funções Implementadas
 A seguir, são apresentadas as funções implementadas no algoritmo LAC, bem como a descrição de suas funcionalidades:
 
-- [**`int main()`**](src/main.cpp): Esta função é responsável por apenas fazer o gereciamento do fluxo de execução do programa, chamando as funções necessárias para realizar a classificação das mãos de pôquer, medir o tempo e inicialmente escolher se será executado reduzindo a cardinalidade ou não. Além de no final, fazer o cálculo do resultado, relacionando a acurácia e o tempo de execução.
 
-- [**`LAc::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes, bool decreaseCardinality)`**](src/lac.cpp): Construtor da classe Lac, responsável por inicializar as variáveis necessárias para a execução do algoritmo LAC. Sendo elas a tabela de features, a tabela de classes e opição se será reduzida a cardinalidade ou não.
+#### [**`int main()`**](src/main.cpp)
+Esta função é responsável por apenas fazer o gereciamento do fluxo de execução do programa, chamando as funções necessárias para realizar a classificação das mãos de pôquer, medir o tempo e inicialmente escolher se será executado reduzindo a cardinalidade ou não. Além de no final, fazer o cálculo do resultado, relacionando a acurácia e o tempo de execução.
 
-- [**`void Lac::trainig(string path)`**](src/lac.cpp): Função responsável por realizar a fase de treinamento do algoritmo LAC, mapeando as features e as classes presentes na base de treinamento.
-  - Nesta função, é feito a leitura do arquivo de treinamento, mapeamento das features e classes, e a redução da cardinalidade, caso seja escolhido. 
-  - A redução da cardinalidade é feita pegando os valores de uma carta e um naipe, e transformando em um valor único, de 0 a 51, para cada carta. Esse passo é realizado conforme a função de codificação apresentada anteriormente.
-  - Caso a redução da cardinalidade não seja escolhida, o algoritmo segue normalmente, mapeando as features e classes da base de treinamento.
+#### [**`int Lac::INTERSECTION_LIMIT = 0`**](src/lac.hpp)
+Variável estática que define o limite de interseção para a análise combinatória.
 
-- [**`float Lac::testing(string path)`**](src/lac.cpp): Função responsável por realizar a fase de teste do algoritmo LAC, classificando as mãos de pôquer presentes na base de teste.
-  - Nesta função, é feito a leitura do arquivo de teste, mapeamento das features e classes, e a redução da cardinalidade, caso seja escolhido. 
-  - A redução da cardinalidade é feita da mesma forma que na função de treinamento, pegando os valores de uma carta e um naipe, e transformando em um valor único, de 0 a 51, para cada carta.
-  - Caso a redução da cardinalidade não seja escolhida, o algoritmo segue normalmente, mapeando as features e classes da base de teste.
-  - Após o mapeamento, é definido o threshold de similaridade, que é o valor mínimo de similaridade entre duas linhas para que a classificação de uma possa ser feita com base na outra. Caso a similaridade seja maior que o threshold, a classificação da linha será a mesma da linha similar.
-  - Depois, é inicializado o processo de classificação, definindo um vetor de combinações de features, que será utilizado para realizar a análise combinatória e interseção entre as features. Também é definida uma variável booleana `shouldStop`, que indica se o processo de análise deve ser interrompido, caso a dimensão do vetor de interseções seja menor que um valor mínimo.
-  - Entrando em um loop, que será o indicador no acesso de cada tupla: 1 a 1, 2 a 2, 3 a 3, assim por diante. Nele a combinação de features é feita, através da função `combinations`, retornado o resultado para o vetor de combinações.
-  - Após a combinação, é feita divisão das threads para paralelizar o processo de classificação, e a partir disso, é feita a análise combinatória e interseção entre as features, para determinar a classe da linha. É  feita a criação das variáveis e é atribuido a cada thread um intervalo de combinações, para que seja feita a análise combinatória e interseção entre as features, além do vetor das combinações, as features, as classes, resultado da classificação e o sholdStop. Assim é feita a criação das threads, e é feito o join para que todas as threads sejam finalizadas.
-  - Por fim, é feito a classificação das linhas, através da função `classification`, que é responsável por determinar a classe da linha, baseada na análise combinatória e interseção entre as features. E também é escrito o resultado da classificação no arquivo de saída, contendo a linha e a sua classificação. 
-  - Ao final, é feito o cálculo da acurácia, comparando a classificação feita pelo algoritmo com a classe real da linha, somando então a quantidade de acertos e erros, para determinar a acurácia final.
-  - Saindo do loop, é escrito no arquivo de saída o número de acertos e erros. E por fim, a função `testing` retorna a acurácia final.
+#### [**`unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> Lac::similarityCache`**](src/lac.hpp)
+Tabela de cache de similaridade para armazenar os valores de similaridade entre as linhas.
 
-- [**`vector<int> Lac::splitString(string line)`***](src/lac.cpp): Função responsável por dividir uma string em um vetor de inteiros, separando os valores por vírgula.
+#### [**`Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes) )`**](src/lac.cpp)
+Construtor da classe Lac, responsável por inicializar as variáveis necessárias para a execução do algoritmo LAC. Sendo elas a tabela de features e a tabela de classes.
 
-- [**`unordered_set<int> Lac::intersectionAll(vector<unordered_set<int>> lists)`**](src/lac.cpp): Função responsável por realizar a interseção entre todas as listas de inteiros presentes em um vetor de conjuntos.
+#### [**`void Lac::trainig(string path)`**](src/lac.cpp)
+Função responsável por realizar a fase de treinamento do algoritmo LAC, mapeando as features e as classes presentes na base de treinamento. Nesta função, é feito a leitura do arquivo de treinamento, mapeamento das features e classes, e a redução da cardinalidade, caso seja escolhido. A redução da cardinalidade é feita pegando os valores de uma carta e um naipe, e transformando em um valor único, de 0 a 51, para cada carta. Caso a redução da cardinalidade não seja escolhida, o algoritmo segue normalmente, mapeando as features e classes da base de treinamento. 
 
-- [**`int Lac::findMaxIndex(double* arr, int size)`**](src/lac.cpp): Função responsável por encontrar o índice do maior valor em um vetor de doubles.
+#### [**`float Lac::testing(string path)`**](src/lac.cpp)
+Essa função é responsável por testar o algoritmo LAC, classificando as mãos de pôquer presentes na base de teste. A função segue os seguintes passos:
+1. **Abertura dos Arquivos**: Abre o arquivo de teste e o arquivo de saída.
+2. **Inicialização das Variáveis**: Inicializa as variáveis necessárias para a classificação. 
+  -`int j = 1`: Essa variável é usada para contar as linhas do arquivo de teste (ou seja, os exemplos sendo processados).
+  - `int loss = 0`, `accuracy = 0`: Essas variáveis são usadas para contar quantas vezes o classificador errou (loss) e quantas vezes acertou (accuracy).
+3. **Processamento Linha a Linha do Arquivo de Teste**: A função lê o arquivo linha por linha utilizando `getline(file, line)`. Para cada linha:
+  - *Extração dos Valores*: A função chama `splitString(line)` para dividir a linha em um vetor de inteiros (`values`), representando os atributos da amostra de teste e sua classe esperada (o último valor).
+  - *Inicialização de Resultados*: Um array `result[]` é inicializado com zeros. Ele terá o tamanho do número de classes e será preenchido com os valores de confiança (suporte) para cada classe.
+  - *Extração das Features*: A linha é convertida em uma lista de pares `lineFeatures`, que são as features (características) extraídas do exemplo de teste. Dependendo do valor de `DECREASE_CARDINALITY`, as features são processadas de duas formas:
+    - `DECREASE_CARDINALITY = true`: Os valores são processados aos pares e combinados em índices. Isso parece ser uma maneira de reduzir a cardinalidade dos dados.
+    `DECREASE_CARDINALITY = false`: Cada valor da linha é considerado individualmente como uma feature.
+4. **Combinando as Features**: Aqui inicia o processo de combinação das features. Onde: 
+  - O vetor `lineFeatures` armazena os atributos (*features*) de cada linha do conjunto de dados.
+  - O vetor `combinationsFeatures` é uma estrutura que vai armazenar todas as combinações de atributos geradas para cada exemplo de teste.
+  - A função `combinations(lineFeatures, q)` será usada para gerar as combinações de features, onde `q` representa o tamanho das combinações que serão geradas (1 a 1, 2 a 2, e assim por diante até o tamanho máximo `MAX_COMBS`).
+  - Também é definida a variável `shouldStop`, que indica se o processo de análise deve ser interrompido, caso a dimensão do vetor de interseções seja menor que um valor mínimo (`INTERSECTION_LIMIT`).
 
-- [**`vector<unordered_set<pair<int, int>, pairHash>> Lac::combinations(const vector<pair<int, int>>& c, int k)`**](src/lac.cpp): Essa função recebe como parâmetros o vetor `c` e o número de elementos na combinação `k`. 
+5. **Processamento Paralelo das Combinações**: Aqui, o algoritmo divide o trabalho de processamento das combinações entre várias threads, para acelerar o processo. Cada thread é responsável por processar um intervalo de combinações.
+  - **Criação das Threads**: 
+    - Defini-se número de threads (`numThreads = 5`) que serão usadas para processar as combinações.
+    - Cada thread é representada por um objeto `pthread_t`, e o código cria um array de threads.
+    - A estrutura `ThreadData` contém os dados que serão passados para cada thread.
+    - A variável `chunkSize` armazena o tamanho do intervalo de combinações que cada thread irá processar.
+
+  - **Divisão de Tarefas**: Cada thread recebe uma estrutura de dados `ThreadData`, que contém os seguintes elementos:
+    - `combinationsFeatures`: Um ponteiro para o vetor de combinações de features que a thread irá processar.
+    - `features`: Um ponteiro para o conjunto completo de features do conjunto de dados.
+    - `classes`: Um ponteiro para as classes associadas ao conjunto de dados.
+    - `start` e `end`: Definem o intervalo de combinações de features que essa thread irá processar.
+      - `start` é calculado como `t * chunkSize`.
+      - `end` é calculado como `  `, exceto para a última thread, que processa até o fim de `combinationsFeatures`.
+    - `result`: Uma referência ao vetor que armazena os resultados das classificações feitas pela thread.
+    - `shouldStop`: Um ponteiro para a variável de controle que indica se o processamento deve parar.
+    - `similarityCache`: Um ponteiro para o cache de similaridades, que pode ser usado para acelerar o cálculo de interseções, evitando a recomputação de resultados que já foram processados anteriormente.
+  
+  - **Criação das Threads**: Depois de atribuir os dados, o código cria a thread com a função `pthread_create`. Cada thread executa a função `threadIntersection`, que é responsável por processar as combinações de features e calcular as interseções.
+
+  - **Espera pelo Término das Threads**: Após criar todas as threads, o código aguarda o término de cada uma delas com a função `pthread_join`.
+
+6. **Classificação das Linhas**: Após o processamento paralelo das combinações, o algoritmo classifica as linhas com base nas interseções de features geradas. A função `classification` é responsável por determinar a classe de cada linha com base nas interseções de features. Depois é escrito o resultado da classificação no arquivo de saída, contendo a linha e a sua classificação.
+
+7. **Cálculo da Acurácia**: O algoritmo calcula a acurácia da classificação, comparando as classes reais com as classes previstas. A acurácia é o número de acertos dividido pelo número total de exemplos de teste.
+
+8. **Fechamento dos Arquivos**: Por fim, o algoritmo fecha os arquivos de entrada e saída.
+
+#### [**`vector<int> Lac::splitString(string line)`**](src/lac.cpp)
+Função responsável por dividir uma string em um vetor de inteiros, separando os valores por vírgula.
+
+#### [**`unordered_set<int> Lac::intersectionAll(vector<unordered_set<int>> lists)`**](src/lac.cpp)
+Função responsável por realizar a interseção entre todas as listas de inteiros presentes em um vetor de conjuntos.
+
+#### [**`int Lac::findMaxIndex(double* arr, int size)`**](src/lac.cpp)
+Função responsável por encontrar o índice do maior valor em um vetor de doubles.
+
+#### [**`vector<unordered_set<pair<int, int>, pairHash>> Lac::combinations(const vector<pair<int, int>>& c, int k)`**](src/lac.cpp)
+Essa função recebe como parâmetros o vetor `c` e o número de elementos na combinação `k`. 
   - Seu principal objetivo é retornar um vetor contendo todas as combinações dos elementos de `c`, cada uma com `k` valores. A função utilizada foi escolhida por ser diferente das que estamos habituados a usar (as com recursão ou similares), justamente pela curiosidade.
   - Ela lança mão de operações bit a bit e shifting para retornar o resultado. De forma muito simplificada, a cada iteração ela mapeia os elementos do vetor `c` com um número binário "comb" para informar as combinações de `c` com `k` valores.
   - Ela inicia sempre das "combinações" de apenas um elemento e vai até a de `k` elementos. Porém, existe uma condicional que adiciona no vetor de resultados apenas as junções de `k` valores.
@@ -545,78 +588,37 @@ A seguir, são apresentadas as funções implementadas no algoritmo LAC, bem com
 
   E o processo se repete até acabar as combinações de `k` elementos.
 
-- [**`void Lac::populateCache(vector<pair<int, int>> lineFeatures, int classBucket)`**](src/lac.cpp): Função responsável por popular o cache de similaridade com as features de uma linha e sua classe.
+#### [**`void Lac::populateCache(cacheKey lineFeatures, cacheValue classesSupport)`**](src/lac.cpp)
+Função responsável por popular a cache de similaridade, armazenando os valores de similaridade entre as features de uma linha e as classes associadas a ela.
 
-- [**`pair<int, double> Lac::checkSimilarity(vector<pair<int, int>> lineFeatures)`**](src/lac.cpp): Função responsável por verificar a similaridade entre as features de uma linha e as features presentes no cache de similaridade. 
+#### [**`pair<vector<double>, double> Lac::checkSimilarity(cacheKey lineFeatures)`**](src/lac.cpp)
+Função responsável por verificar a similaridade entre as features de uma linha e as features presentes no cache de similaridade.
   - Nessa função, é feito um loop para percorrer todas as linhas presentes no cache de similaridade, chamando a função `cosineSimilarity` para calcular a similaridade entre as features da linha e as features presentes no cache. Caso a similaridade seja maior que o threshold, a função retorna um par contendo a classe da linha e a similaridade calculada.
 
-- [**`double Lac::cosineSimilarity(const vector<pair<int, int>>& vec1, const vector<pair<int, int>>& vec2)`**](src/lac.cpp): Função responsável por calcular a similaridade de cossenos entre dois vetores de pares de inteiros.
+#### [**`double Lac::cosineSimilarity(const vector<pair<int, int>>& vec1, const vector<pair<int, int>>& vec2)`**](src/lac.cpp)
+Função responsável por calcular a similaridade de cossenos entre dois vetores de pares de inteiros.
   - Nessa função, é feito o cálculo do produto escalar entre os vetores e a magnitude de cada vetor, para então retornar o cosseno da similaridade entre os vetores.
   - A similaridade de cossenos é calculada pela fórmula: $cos(\theta) = \frac{A \cdot B}{||A|| \cdot ||B||}$.
 
-- [**`void* Lac::threadIntersection(void* arg)`**](src/lac.cpp): Função responsável por realizar a análise combinatória e interseção entre as features de uma linha, utilizando threads para paralelizar o processo de classificação.
-  - Nessa função, inicialmente é feito o cast do argumento para o tipo `ThreadData`, que contém as informações necessárias para a execução da thread.
-  - Depois é feito um loop para percorrer as combinações de features presentes no vetor de combinações desde o início(`start`) até o final(`end`), onde é criado um `unordered_set` para armazenar as combinações de features e um vetor de `unordered_set` para armazenar as linhas de cada combinação.
-  - Em seguida, é feito um loop para percorrer as combinações de features, adicionando as linhas de cada combinação ao vetor de `unordered_set`.
-  - Após, é criado outro `unordered_set` para armazenar a interseção entre as linhas de cada combinação;
-  - Se a dimensão do vetor de interseções for maior que o limite mínimo, é feita a interseção entre as linhas de cada combinação, armazenando o resultado no vetor de interseções.
-  - Assim, é inicializado um loop para percorrer as classes, onde dentro dele é feito um loop para percorrer as linhas de cada combinação, verificando se a linha pertence à classe. Caso pertença, a linha é adicionada ao vetor de interseções.
-  - Por fim, é feito o cálculo da confiança e do suporte para cada classe, baseado na interseção entre as linhas de cada combinação.
+#### [**`void* Lac::threadIntersection(void* arg)`**](src/lac.cpp)
+Essa função é o núcleo da execução paralela no código que trabalha com combinações de features para realizar classificações. Ela é executada por cada thread criada, e cada uma processa uma parte do conjunto de combinações de features para calcular a interseção entre elas e as classes.
+1. **Inicialização do Mutex**: A função começa com a inicialização de um `pthread_mutex_t` para garantir a sincronização entre threads quando elas acessam recursos compartilhados, como o vetor de resultados (`result`) e o cache de similaridades (`similarityCache`).
+2. **Conversão do Argumento**: O argumento da função (`arg`) é convertido de `void*` para `ThreadData*`. Isso porque a função `pthread_create` passa o dado como um ponteiro genérico, e é necessário convertê-lo de volta para o tipo específico.
+3. **Laço de Processamento das Combinações**: A função processa as combinações de features no intervalo entre `start` e `end` definido para a thread. Converte-se a combinação atual (um `unordered_set` de pares) para um vetor de pares chamado `combinacoesCacheVec`.
+4. **Verificação no Cache de Similaridade**: Se a combinação já existe no cache de similaridades (`similarityCache`), os resultados armazenados no cache são diretamente somados ao vetor `result`, evitando o recálculo. O uso do `pthread_mutex_lock` e `pthread_mutex_unlock` garante que apenas uma thread por vez possa acessar e modificar o result e o similarityCache.
+5. **Cáculo da Similaridade de Cossenos**: Se a similaridade cosseno for ativada (`USE_COSINE_SIMILARITY`), a função tentará calcular a similaridade entre as combinações e as classes. Caso o resultado seja superior a um certo limiar (`THRESHOLD`), ele será usado para incrementar o `result`.
+6. **Interseção de Linhas**: Caso a combinação ainda não tenha sido processada, a função realiza a interseção das linhas das features associadas a essa combinação.
+  - Se a combinação contiver apenas uma *feature*, a interseção é simplesmente o conjunto de linhas dessa *feature*.
+  - Caso contrário, a função `intersectionAll` é chamada para calcular a interseção entre todos os conjuntos de linhas.
+7. **Limite de Interseção**: Se o número de elementos na interseção for inferior a um certo limite (`INTERSECTION_LIMIT`), o processamento é interrompido para essa thread.
+8. **Verificação de Interseção por Classe**: Para cada classe, o código verifica se os elementos da interseção pertencem a essa classe. Caso positivo, calcula a confiança (número de elementos na interseção) e o suporte, que é a proporção de elementos da interseção em relação ao total de features.
+  - Se a confiança for maior que um limite mínimo (`MIN_SUPORTE`), o suporte é somado ao vetor `result` para a classe correspondente.
+  - Se a similaridade cosseno estiver ativada, o suporte também é adicionado ao `similarityCache`.
+9. **Atualização do Cache de Similaridade**: Se o uso de similaridade cosseno estiver ativo, o suporte para a combinação é armazenado no cache, para evitar recalcular no futuro.
+10. **Retorno dos Resultados**: Após processar todas as combinações, a função retorna `NULL`.
 
 <p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
 
-
-## 📊 Testes e Análises dos Resultados
-
-<div  align="justify">
-  Analisar os resultados obtidos após a implementação das otimizações propostas é essencial para avaliar a eficácia das melhorias realizadas. Para isso, é necessário realizar testes com diferentes configurações e comparar os resultados obtidos com a implementação padrão do algoritmo LAC. No decorrer da realização deste estudo, foram realizados testes utilizando a implementação padrão do algoritmo e as otimizações propostas, a fim de avaliar a eficácia das melhorias implementadas. Os testes foram realizados em um ambiente controlado, com as mesmas configurações de hardware e software, a fim de garantir a consistência dos resultados obtidos. A seguir, são apresentados os resultados dos testes realizados, bem como as análises feitas a partir dos mesmos.
-
-  ### Testes
-  Primeiramente, teve-se a implementação padrão do algoritmo LAC, sem nenhuma otimização, como base para os testes realizados. Em seguida, foram implementadas as otimizações propostas, uma a uma, a fim de avaliar o impacto de cada uma delas no desempenho do algoritmo. 
-
-Posteriormente, decidimos fazer a implementação do cache de interseções, com o objetivo de melhorar a eficiência do algortimo ao parar de fazer interseções repetidas. Após os testes, pode-se afirmar que sua inserção no projeto foi benéfica, pois reduz em grande quantidade o número total de interseções feitas. Uma curiosidade que foi observada e importante de ser destacada é que esse cache de interseções tem uma performance melhor na medida que a base a ser classificada é maior, já que com isso o número de interseções repetidas a serem "retiradas" é maior.
-
-Depois disso e ainda não conformados com o resultado obtido, resolvemos implementar a redução de cardinalidade. A redução de cardinalidade tem como objetivo diminuir a quantidade de características únicas que o algoritmo precisa considerar, o que pode levar a economias significativas de memória e a melhorias de desempenho. Como resultado, obtivemos:
-
-
-<div align='center'>
-  <img src='./images/reducaoCardinalidade.jpeg' alt='Resultados com redução de cardinalidade' width='600px'>
-  <p>Resultados com redução de cardinalidade</p>
-</div>
-
-Ainda não satisfeitos com o resultado, implementamos o cache de similaridade do cosseno. Essa métrica é utilizada para medir a similaridade entre dois vetores, baseada no cosseno do ângulo entre eles. Essa medida avalia a orientação dos vetores no espaço multidimensional, ignorando seus comprimentos. O valor da similaridade do cosseno varia de -1 a 1, onde 1 indica que os vetores são perfeitamente semelhantes, 0 indica que são ortogonais (sem similaridade), e -1 indica que são opostos.
-
-No nosso trabalho, a similaridade do cosseno é utilizada para comparar a similaridade entre características extraídas pelo algoritmo LAC. O objetivo é melhorar a eficiência do algoritmo ao armazenar e reutilizar resultados de similaridade através de técnicas de cache. Isso ajuda a reduzir o tempo de computação ao evitar recalcular a similaridade entre os mesmos pares de vetores repetidamente, especialmente em grandes volumes de dados.
-
-Para a validação dessa implementação, foram feitos dois testes:
-
-Teste 01 -> Com o Cache de Similaridade e sem Redução de Cardinalidade: Nesse teste, o resultado obtido se encontra na imagem abaixo:
-
-
-<div align='center'>
-  <img src='./images/cossenoSemReducao.jpeg' alt='Cache de Similaridade sem Redução de Cardinalidade' width='600px'>
-  <p>Cache de Similaridade sem Redução de Cardinalidade</p>
-</div>
-
-Melhora de 20% na acurácia, com perda no tempo de execução.
-
-Teste 02 -> Com o Cache de Similaridade e com Redução de Cardinalidade:  
-
-Por fim, o último teste realizado foi utilizando ambos o cache de similaridade do cosseno e a redução de cardinalidade e, como resultado, temos:
-
-
-
-<div align='center'>
-  <img src='./images/cossenoComReducao.jpeg' alt='Cache de Similaridade com Redução de Cardinalidade' width='600px'>
-  <p>Cache de Similaridade com Redução de Cardinalidade</p>
-</div>
-
-Obtivemos, assim, uma melhora na acurácia, com um ganho de 98,11% no tempo de execução em relação à versão sem redução de cardinalidade e 95,13% em relação à versão sem a implementação da similaridade de cosseno e redução de cardinalidade, constituindo, dessa forma, a melhor versão apresentada pelo algoritmo.
-
-
-</div>
-
-<p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
 
 ## 🏁 Conclusão
 
@@ -756,6 +758,7 @@ Ubuntu 24.04.4 LTS | g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
 <p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
 
 📚 Referências
+<a name="referencias"></a>
 
 [^1]: A. A. Veloso, "Classificação associativa sob demanda," Ph.D. dissertação, Departamento de Ciência da Computação, Universidade Federal de Minas Gerais, Belo Horizonte, Brasil, 2009.
 
