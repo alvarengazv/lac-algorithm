@@ -483,23 +483,36 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
 ### 📝 Funções Implementadas
 A seguir, são apresentadas as funções implementadas no algoritmo LAC, bem como a descrição de suas funcionalidades:
 
-
 #### [**`int main()`**](src/main.cpp)
 Esta função é responsável por apenas fazer o gereciamento do fluxo de execução do programa, chamando as funções necessárias para realizar a classificação das mãos de pôquer, medir o tempo e inicialmente escolher se será executado reduzindo a cardinalidade ou não. Além de no final, fazer o cálculo do resultado, relacionando a acurácia e o tempo de execução.
 
 #### [**`int Lac::INTERSECTION_LIMIT = 0`**](src/lac.hpp)
 Variável estática que define o limite de interseção para a análise combinatória.
 
+</div>
+
 #### [**`unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> Lac::similarityCache`**](src/lac.hpp)
+
+<div align='justify'>
 Tabela de cache de similaridade para armazenar os valores de similaridade entre as linhas.
+</div>
 
 #### [**`Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes) )`**](src/lac.cpp)
+
+<div align='justify'>
 Construtor da classe Lac, responsável por inicializar as variáveis necessárias para a execução do algoritmo LAC. Sendo elas a tabela de features e a tabela de classes.
+</div>
 
 #### [**`void Lac::trainig(string path)`**](src/lac.cpp)
+
+<div align='justify'>
 Função responsável por realizar a fase de treinamento do algoritmo LAC, mapeando as features e as classes presentes na base de treinamento. Nesta função, é feito a leitura do arquivo de treinamento, mapeamento das features e classes, e a redução da cardinalidade, caso seja escolhido. A redução da cardinalidade é feita pegando os valores de uma carta e um naipe, e transformando em um valor único, de 0 a 51, para cada carta. Caso a redução da cardinalidade não seja escolhida, o algoritmo segue normalmente, mapeando as features e classes da base de treinamento. 
+</div>
 
 #### [**`float Lac::testing(string path)`**](src/lac.cpp)
+
+<div align='justify'>
+
 Essa função é responsável por testar o algoritmo LAC, classificando as mãos de pôquer presentes na base de teste. A função segue os seguintes passos:
 1. **Abertura dos Arquivos**: Abre o arquivo de teste e o arquivo de saída.
 2. **Inicialização das Variáveis**: Inicializa as variáveis necessárias para a classificação. 
@@ -530,7 +543,7 @@ Essa função é responsável por testar o algoritmo LAC, classificando as mãos
     - `classes`: Um ponteiro para as classes associadas ao conjunto de dados.
     - `start` e `end`: Definem o intervalo de combinações de features que essa thread irá processar.
       - `start` é calculado como `t * chunkSize`.
-      - `end` é calculado como `  `, exceto para a última thread, que processa até o fim de `combinationsFeatures`.
+      - `end` é calculado como `(t + 1) * chunkSize`, exceto para a última thread, que processa até o fim de `combinationsFeatures`.
     - `result`: Uma referência ao vetor que armazena os resultados das classificações feitas pela thread.
     - `shouldStop`: Um ponteiro para a variável de controle que indica se o processamento deve parar.
     - `similarityCache`: Um ponteiro para o cache de similaridades, que pode ser usado para acelerar o cálculo de interseções, evitando a recomputação de resultados que já foram processados anteriormente.
@@ -544,17 +557,30 @@ Essa função é responsável por testar o algoritmo LAC, classificando as mãos
 7. **Cálculo da Acurácia**: O algoritmo calcula a acurácia da classificação, comparando as classes reais com as classes previstas. A acurácia é o número de acertos dividido pelo número total de exemplos de teste.
 
 8. **Fechamento dos Arquivos**: Por fim, o algoritmo fecha os arquivos de entrada e saída.
+</div>
 
 #### [**`vector<int> Lac::splitString(string line)`**](src/lac.cpp)
+
+<div align='justify'>
 Função responsável por dividir uma string em um vetor de inteiros, separando os valores por vírgula.
+</div>
 
 #### [**`unordered_set<int> Lac::intersectionAll(vector<unordered_set<int>> lists)`**](src/lac.cpp)
+
+<div align='justify'>
 Função responsável por realizar a interseção entre todas as listas de inteiros presentes em um vetor de conjuntos.
+</div>
 
 #### [**`int Lac::findMaxIndex(double* arr, int size)`**](src/lac.cpp)
+
+<div align='justify'>
 Função responsável por encontrar o índice do maior valor em um vetor de doubles.
+</div>
 
 #### [**`vector<unordered_set<pair<int, int>, pairHash>> Lac::combinations(const vector<pair<int, int>>& c, int k)`**](src/lac.cpp)
+
+<div align='justify'>
+
 Essa função recebe como parâmetros o vetor `c` e o número de elementos na combinação `k`. 
   - Seu principal objetivo é retornar um vetor contendo todas as combinações dos elementos de `c`, cada uma com `k` valores. A função utilizada foi escolhida por ser diferente das que estamos habituados a usar (as com recursão ou similares), justamente pela curiosidade.
   - Ela lança mão de operações bit a bit e shifting para retornar o resultado. De forma muito simplificada, a cada iteração ela mapeia os elementos do vetor `c` com um número binário "comb" para informar as combinações de `c` com `k` valores.
@@ -587,20 +613,34 @@ Essa função recebe como parâmetros o vetor `c` e o número de elementos na co
       - `combo = 0b0101`.
 
   E o processo se repete até acabar as combinações de `k` elementos.
+</div>
 
 #### [**`void Lac::populateCache(cacheKey lineFeatures, cacheValue classesSupport)`**](src/lac.cpp)
+
+<div align='justify'>
 Função responsável por popular a cache de similaridade, armazenando os valores de similaridade entre as features de uma linha e as classes associadas a ela.
+</div>
 
 #### [**`pair<vector<double>, double> Lac::checkSimilarity(cacheKey lineFeatures)`**](src/lac.cpp)
+
+<div align='justify'>
+
 Função responsável por verificar a similaridade entre as features de uma linha e as features presentes no cache de similaridade.
   - Nessa função, é feito um loop para percorrer todas as linhas presentes no cache de similaridade, chamando a função `cosineSimilarity` para calcular a similaridade entre as features da linha e as features presentes no cache. Caso a similaridade seja maior que o threshold, a função retorna um par contendo a classe da linha e a similaridade calculada.
+</div>
 
 #### [**`double Lac::cosineSimilarity(const vector<pair<int, int>>& vec1, const vector<pair<int, int>>& vec2)`**](src/lac.cpp)
+
+<div align='justify'>
 Função responsável por calcular a similaridade de cossenos entre dois vetores de pares de inteiros.
   - Nessa função, é feito o cálculo do produto escalar entre os vetores e a magnitude de cada vetor, para então retornar o cosseno da similaridade entre os vetores.
   - A similaridade de cossenos é calculada pela fórmula: $cos(\theta) = \frac{A \cdot B}{||A|| \cdot ||B||}$.
+</div>
 
 #### [**`void* Lac::threadIntersection(void* arg)`**](src/lac.cpp)
+
+<div align='justify'>
+
 Essa função é o núcleo da execução paralela no código que trabalha com combinações de features para realizar classificações. Ela é executada por cada thread criada, e cada uma processa uma parte do conjunto de combinações de features para calcular a interseção entre elas e as classes.
 1. **Inicialização do Mutex**: A função começa com a inicialização de um `pthread_mutex_t` para garantir a sincronização entre threads quando elas acessam recursos compartilhados, como o vetor de resultados (`result`) e o cache de similaridades (`similarityCache`).
 2. **Conversão do Argumento**: O argumento da função (`arg`) é convertido de `void*` para `ThreadData*`. Isso porque a função `pthread_create` passa o dado como um ponteiro genérico, e é necessário convertê-lo de volta para o tipo específico.
@@ -616,6 +656,7 @@ Essa função é o núcleo da execução paralela no código que trabalha com co
   - Se a similaridade cosseno estiver ativada, o suporte também é adicionado ao `similarityCache`.
 9. **Atualização do Cache de Similaridade**: Se o uso de similaridade cosseno estiver ativo, o suporte para a combinação é armazenado no cache, para evitar recalcular no futuro.
 10. **Retorno dos Resultados**: Após processar todas as combinações, a função retorna `NULL`.
+</div>
 
 <p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
 
