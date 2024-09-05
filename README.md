@@ -427,7 +427,7 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
 
 - **`#define USE_COSINE_SIMILARITY 1`**: definição para usar a similaridade de cossenos.
 
-- **`#define THRESHOLD 0.92`**: definição da confiança mínima para a classificação de uma linha.
+- **`#define THRESHOLD 0.8`**: definição da confiança mínima para a classificação de uma linha.
 
 - **`#define MAX_COMBS 3`**: definição do número máximo de combinações de features a serem analisadas.
 
