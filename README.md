@@ -413,13 +413,13 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
 
 - **`#define MIN_SUPPORT 0`**: definição do suporte mínimo para a classificação de uma linha.
 
-- **`#define THRESHOLD 0.92`**: definição da confiança mínima para a classificação de uma linha.
-
-- **`#define MAX_COMBS 3`**: definição do número máximo de combinações de features a serem analisadas.
-
 - **`#define DECREASE_CARDINALITY 1`**: definição para reduzir a cardinalidade das features.
 
 - **`#define USE_COSINE_SIMILARITY 1`**: definição para usar a similaridade de cossenos.
+
+- **`#define THRESHOLD 0.92`**: definição da confiança mínima para a classificação de uma linha.
+
+- **`#define MAX_COMBS 3`**: definição do número máximo de combinações de features a serem analisadas.
 
 - **`using namespace std`**: definição do namespace padrão da linguagem C++.
 
@@ -446,15 +446,15 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
 - **`struct vectorPairEqual`**: Essa estrutura define uma função de igualdade para `vector` de pares de inteiros. Ela compara dois vetores para ver se eles são iguais.
   - `return lhs == rhs`: Retorna verdadeiro se os dois vetores forem iguais, falso caso contrário.
 
-- **`using cacheKey = unordered_set<pair<int, int>, pairHashSimilarity>;`**: Essa linha define um `typedef` ou `using` para `unordered_set` de pares de inteiros com a função hash `pairHashSimilarity`.
+- **`using cacheKey = unordered_set<pair<int, int>, pairHashSimilarity>`**: Essa linha define um `typedef` ou `using` para `unordered_set` de pares de inteiros com a função hash `pairHashSimilarity`.
 
-- **`using cacheValue = int;`**: Essa linha define um `typedef` ou `using` para um inteiro, que será o valor armazenado na tabela de cache.
+- **`using cacheValue = int`**: Essa linha define um `typedef` ou `using` para um inteiro, que será o valor armazenado na tabela de cache.
 
 - **`struct ThreadData`**: Essa estrutura define os dados que serão passados para cada thread durante a execução paralela do algoritmo LAC.
   - `vector<unordered_set<pair<int, int>, pairHash>>* combinationsFeatures`: Ponteiro para o vetor de combinações de features.
   - `unordered_map<pair<int, int>, unordered_set<int>, pairHash>* features`: Ponteiro para a tabela de features.
   - `unordered_map<int, unordered_set<int>>* classes`: Ponteiro para a tabela de classes.
-  - `unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual>* similarityCache;`: Ponteiro para a tabela de cache de similaridade.
+  - `unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual>* similarityCache`: Ponteiro para a tabela de cache de similaridade.
   - `bool* shouldStop`: Ponteiro para a variável que indica se o processo de análise deve ser interrompido.
   - `int start`: Índice de início do intervalo de combinações.
   - `int end`: Índice de fim do intervalo de combinações.
@@ -474,8 +474,8 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
     - `vector<int> splitString(string line)`: Função para dividir uma string em um vetor de inteiros.
     - `vector<unordered_set<pair<int, int>, pairHash>> combinations(const vector<pair<int, int>>& c, int k)`: Função para gerar todas as combinações de tamanho k de um vetor de pares de inteiros.
     - `void populateCache(cacheKey lineFeatures, cacheValue classesSupport)`: Função para popular a cache de similaridade.
-    - `static pair<vector<double>, double> checkSimilarity(cacheKey lineFeatures);`: Função para verificar a similaridade entre duas linhas.
-    - `static double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2);`: Função para calcular a similaridade de cossenos entre dois vetores.
+    - `static pair<vector<double>, double> checkSimilarity(cacheKey lineFeatures)`: Função para verificar a similaridade entre duas linhas.
+    - `static double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2)`: Função para calcular a similaridade de cossenos entre dois vetores.
     - `static void* threadIntersection(void* arg)`: Função para realizar a interseção em paralelo.
     - `static int INTERSECTION_LIMIT`: Limite de interseção.
     - `static unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> similarityCache`: Tabela de cache de similaridade.
@@ -488,6 +488,9 @@ Esta função é responsável por apenas fazer o gereciamento do fluxo de execu�
 
 #### [**`int Lac::INTERSECTION_LIMIT = 0`**](src/lac.hpp)
 Variável estática que define o limite de interseção para a análise combinatória.
+
+#### [**`pthread_mutex_t Lac::mutex = PTHREAD_MUTEX_INITIALIZER`**](src/lac.hpp)
+Variável estática que define o mutex para sincronização entre threads.
 
 </div>
 
@@ -518,6 +521,7 @@ Essa função é responsável por testar o algoritmo LAC, classificando as mãos
 2. **Inicialização das Variáveis**: Inicializa as variáveis necessárias para a classificação. 
   -`int j = 1`: Essa variável é usada para contar as linhas do arquivo de teste (ou seja, os exemplos sendo processados).
   - `int loss = 0`, `accuracy = 0`: Essas variáveis são usadas para contar quantas vezes o classificador errou (loss) e quantas vezes acertou (accuracy).
+  - `pthread_mutex_init(&mutex, NULL)`: Inicializa o mutex para sincronização entre threads.
 3. **Processamento Linha a Linha do Arquivo de Teste**: A função lê o arquivo linha por linha utilizando `getline(file, line)`. Para cada linha:
   - *Extração dos Valores*: A função chama `splitString(line)` para dividir a linha em um vetor de inteiros (`values`), representando os atributos da amostra de teste e sua classe esperada (o último valor).
   - *Inicialização de Resultados*: Um array `result[]` é inicializado com zeros. Ele terá o tamanho do número de classes e será preenchido com os valores de confiança (suporte) para cada classe.
@@ -531,13 +535,13 @@ Essa função é responsável por testar o algoritmo LAC, classificando as mãos
   - Também é definida a variável `shouldStop`, que indica se o processo de análise deve ser interrompido, caso a dimensão do vetor de interseções seja menor que um valor mínimo (`INTERSECTION_LIMIT`).
 
 5. **Processamento Paralelo das Combinações**: Aqui, o algoritmo divide o trabalho de processamento das combinações entre várias threads, para acelerar o processo. Cada thread é responsável por processar um intervalo de combinações.
-  - **Criação das Threads**: 
+  - *Inicialização das Threads*:
     - Defini-se número de threads (`numThreads = 5`) que serão usadas para processar as combinações.
     - Cada thread é representada por um objeto `pthread_t`, e o código cria um array de threads.
     - A estrutura `ThreadData` contém os dados que serão passados para cada thread.
     - A variável `chunkSize` armazena o tamanho do intervalo de combinações que cada thread irá processar.
 
-  - **Divisão de Tarefas**: Cada thread recebe uma estrutura de dados `ThreadData`, que contém os seguintes elementos:
+  - *Divisão de Tarefas*: Cada thread recebe uma estrutura de dados `ThreadData`, que contém os seguintes elementos:
     - `combinationsFeatures`: Um ponteiro para o vetor de combinações de features que a thread irá processar.
     - `features`: Um ponteiro para o conjunto completo de features do conjunto de dados.
     - `classes`: Um ponteiro para as classes associadas ao conjunto de dados.
@@ -548,11 +552,11 @@ Essa função é responsável por testar o algoritmo LAC, classificando as mãos
     - `shouldStop`: Um ponteiro para a variável de controle que indica se o processamento deve parar.
     - `similarityCache`: Um ponteiro para o cache de similaridades, que pode ser usado para acelerar o cálculo de interseções, evitando a recomputação de resultados que já foram processados anteriormente.
   
-  - **Criação das Threads**: Depois de atribuir os dados, o código cria a thread com a função `pthread_create`. Cada thread executa a função `threadIntersection`, que é responsável por processar as combinações de features e calcular as interseções.
+  - *Criação das Threads*: Depois de atribuir os dados, o código cria a thread com a função `pthread_create`. Cada thread executa a função `threadIntersection`, que é responsável por processar as combinações de features e calcular as interseções.
 
-  - **Espera pelo Término das Threads**: Após criar todas as threads, o código aguarda o término de cada uma delas com a função `pthread_join`.
+  - *Espera pelo Término das Threads*: Após criar todas as threads, o código aguarda o término de cada uma delas com a função `pthread_join`.
 
-6. **Classificação das Linhas**: Após o processamento paralelo das combinações, o algoritmo classifica as linhas com base nas interseções de features geradas. A função `classification` é responsável por determinar a classe de cada linha com base nas interseções de features. Depois é escrito o resultado da classificação no arquivo de saída, contendo a linha e a sua classificação.
+6. **Classificação das Linhas**: Após o processamento paralelo das combinações, o algoritmo classifica as linhas com base nas interseções de features geradas. A função `classification` é responsável por determinar a classe de cada linha com base nas interseções de features. Logo após, é chamado um `pthread_mutex_destroy(&mutex)` para destruir o mutex utilizado para sincronização entre threads. Depois é escrito o resultado da classificação no arquivo de saída, contendo a linha e a sua classificação.
 
 7. **Cálculo da Acurácia**: O algoritmo calcula a acurácia da classificação, comparando as classes reais com as classes previstas. A acurácia é o número de acertos dividido pelo número total de exemplos de teste.
 
@@ -642,19 +646,18 @@ Função responsável por calcular a similaridade de cossenos entre dois vetores
 <div align='justify'>
 
 Essa função é o núcleo da execução paralela no código que trabalha com combinações de features para realizar classificações. Ela é executada por cada thread criada, e cada uma processa uma parte do conjunto de combinações de features para calcular a interseção entre elas e as classes.
-1. **Inicialização do Mutex**: A função começa com a inicialização de um `pthread_mutex_t` para garantir a sincronização entre threads quando elas acessam recursos compartilhados, como o vetor de resultados (`result`) e o cache de similaridades (`similarityCache`).
-2. **Conversão do Argumento**: O argumento da função (`arg`) é convertido de `void*` para `ThreadData*`. Isso porque a função `pthread_create` passa o dado como um ponteiro genérico, e é necessário convertê-lo de volta para o tipo específico.
-3. **Laço de Processamento das Combinações**: A função processa as combinações de features no intervalo entre `start` e `end` definido para a thread. Converte-se a combinação atual (um `unordered_set` de pares) para um vetor de pares chamado `combinacoesCacheVec`.
-4. **Verificação no Cache de Similaridade**: Se a combinação já existe no cache de similaridades (`similarityCache`), os resultados armazenados no cache são diretamente somados ao vetor `result`, evitando o recálculo. O uso do `pthread_mutex_lock` e `pthread_mutex_unlock` garante que apenas uma thread por vez possa acessar e modificar o result e o similarityCache.
-5. **Cáculo da Similaridade de Cossenos**: Se a similaridade cosseno for ativada (`USE_COSINE_SIMILARITY`), a função tentará calcular a similaridade entre as combinações e as classes. Caso o resultado seja superior a um certo limiar (`THRESHOLD`), ele será usado para incrementar o `result`.
-6. **Interseção de Linhas**: Caso a combinação ainda não tenha sido processada, a função realiza a interseção das linhas das features associadas a essa combinação.
+1. **Conversão do Argumento**: O argumento da função (`arg`) é convertido de `void*` para `ThreadData*`. Isso porque a função `pthread_create` passa o dado como um ponteiro genérico, e é necessário convertê-lo de volta para o tipo específico.
+2. **Laço de Processamento das Combinações**: A função processa as combinações de features no intervalo entre `start` e `end` definido para a thread. Converte-se a combinação atual (um `unordered_set` de pares) para um vetor de pares chamado `combinacoesCacheVec`.
+3. **Verificação no Cache de Similaridade**: Se a combinação já existe no cache de similaridades (`similarityCache`), os resultados armazenados no cache são diretamente somados ao vetor `result`, evitando o recálculo. 
+4. **Cáculo da Similaridade de Cossenos**: Se a similaridade cosseno for ativada (`USE_COSINE_SIMILARITY`), a função tentará calcular a similaridade entre as combinações e as classes. É feita a inicialização de `pthread_mutex_lock(&mutex)` para garantir a exclusão mútua entre threads. Caso o resultado seja superior a um certo limiar (`THRESHOLD`), ele será usado para incrementar o `result`. Depois é feita a liberação do mutex com `pthread_mutex_unlock(&mutex)`.
+5. **Interseção de Linhas**: Caso a combinação ainda não tenha sido processada, a função realiza a interseção das linhas das features associadas a essa combinação.
   - Se a combinação contiver apenas uma *feature*, a interseção é simplesmente o conjunto de linhas dessa *feature*.
   - Caso contrário, a função `intersectionAll` é chamada para calcular a interseção entre todos os conjuntos de linhas.
-7. **Limite de Interseção**: Se o número de elementos na interseção for inferior a um certo limite (`INTERSECTION_LIMIT`), o processamento é interrompido para essa thread.
-8. **Verificação de Interseção por Classe**: Para cada classe, o código verifica se os elementos da interseção pertencem a essa classe. Caso positivo, calcula a confiança (número de elementos na interseção) e o suporte, que é a proporção de elementos da interseção em relação ao total de features.
+6. **Limite de Interseção**: Se o número de elementos na interseção for inferior a um certo limite (`INTERSECTION_LIMIT`), o processamento é interrompido para essa thread.
+7. **Verificação de Interseção por Classe**: Para cada classe, o código verifica se os elementos da interseção pertencem a essa classe. Caso positivo, calcula a confiança (número de elementos na interseção) e o suporte, que é a proporção de elementos da interseção em relação ao total de features.
   - Se a confiança for maior que um limite mínimo (`MIN_SUPORTE`), o suporte é somado ao vetor `result` para a classe correspondente.
   - Se a similaridade cosseno estiver ativada, o suporte também é adicionado ao `similarityCache`.
-9. **Atualização do Cache de Similaridade**: Se o uso de similaridade cosseno estiver ativo, o suporte para a combinação é armazenado no cache, para evitar recalcular no futuro.
+8. **Atualização do Cache de Similaridade**: Se o uso de similaridade cosseno estiver ativo, o suporte para a combinação é armazenado no cache, para evitar recalcular no futuro.
 10. **Retorno dos Resultados**: Após processar todas as combinações, a função retorna `NULL`.
 </div>
 
