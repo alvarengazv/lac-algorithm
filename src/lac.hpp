@@ -94,6 +94,7 @@ class Lac {
     static void* threadIntersection(void* arg);
     static int INTERSECTION_LIMIT;
     static unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> similarityCache;
+    static pthread_mutex_t mutex;
 };
 
 #endif

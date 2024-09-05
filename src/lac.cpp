@@ -2,6 +2,7 @@
 
 int Lac::INTERSECTION_LIMIT = 0;
 unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> Lac::similarityCache;
+pthread_mutex_t Lac::mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Construtor da classe
 Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes) {
@@ -82,6 +83,7 @@ float Lac::testing(string path) {
 
     string line;
     int j = 1, loss = 0, accuracy = 0;
+    pthread_mutex_init(&mutex, NULL);
 
     while (getline(file, line)) {
         double result[classes.size()] = {0};
@@ -162,10 +164,11 @@ float Lac::testing(string path) {
         }
     }
 
+    pthread_mutex_destroy(&mutex);
+
     cout << "Acertos: " << accuracy << " Erros: " << loss << endl;
 
     // Porcentagem de acertos
-    //
     cout << "Porcentagem de acertos: " << (double)(accuracy * 100) / (accuracy + loss) << "%" << endl;
 
     outFile << "Acertos(accuracy): " << accuracy << " e Erros(loss): " << loss;
@@ -301,7 +304,6 @@ double Lac::cosineSimilarity(const vector<pair<int, int>>& vec1, const vector<pa
 
 // Função que será executada pelas threads
 void* Lac::threadIntersection(void* arg) {
-    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     ThreadData* data = (ThreadData*)arg;
 
     for (int r = data->start; r < data->end; r++) {
@@ -315,9 +317,9 @@ void* Lac::threadIntersection(void* arg) {
             pthread_mutex_unlock(&mutex);
             continue;
         } else if (USE_COSINE_SIMILARITY && data->similarityCache->size() > 0 && combinacoesCacheVec.size() > 1) {
-            pthread_mutex_lock(&mutex);
             pair<vector<double>, double> similarity = checkSimilarity(combinacoesCacheVec);
             if (similarity.second >= THRESHOLD && similarity.first[0] != -1) {
+                pthread_mutex_lock(&mutex);
                 for (int i = 0; i < data->classes->size(); i++) {
                     data->result[i] += similarity.first[i];
                 }
@@ -325,7 +327,6 @@ void* Lac::threadIntersection(void* arg) {
                 pthread_mutex_unlock(&mutex);
                 continue;
             }
-            pthread_mutex_unlock(&mutex);
         }
 
         vector<unordered_set<int>> combinationsLines;
