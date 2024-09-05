@@ -479,6 +479,7 @@ No arquivo [`lac.hpp`](src/lac.hpp), são definidas as estruturas de dados utili
     - `static void* threadIntersection(void* arg)`: Função para realizar a interseção em paralelo.
     - `static int INTERSECTION_LIMIT`: Limite de interseção.
     - `static unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> similarityCache`: Tabela de cache de similaridade.
+    - `static pthread_mutex_t mutex`: Mutex para sincronização entre threads.
 
 ### 📝 Funções Implementadas
 A seguir, são apresentadas as funções implementadas no algoritmo LAC, bem como a descrição de suas funcionalidades:
