@@ -82,7 +82,7 @@ CEFET-MG Campus V <br>
     </li>
     <li><a href="#-ambiente-de-compilação-e-execução">🧪 Ambiente de Compilação e Execução</a></li>
     <li><a href="#-contato">📨 Contato</a></li>
-    <li><a href="#-referencias">📚 Referências</a></li>
+    <li><a href="#referencias">📚 Referências</a></li>
   </ol>
 </details>
 
@@ -801,8 +801,7 @@ Ubuntu 24.04.4 LTS | g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
 
 <p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
 
-📚 Referências
-<a name="referencias"></a>
+<a name="referencias">📚 Referências</a>
 
 [^1]: A. A. Veloso, "Classificação associativa sob demanda," Ph.D. dissertação, Departamento de Ciência da Computação, Universidade Federal de Minas Gerais, Belo Horizonte, Brasil, 2009.
 
