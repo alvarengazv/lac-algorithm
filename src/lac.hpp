@@ -17,7 +17,7 @@
 #define MIN_SUPORTE 0
 #define DECREASE_CARDINALITY 1
 #define USE_COSINE_SIMILARITY 1
-#define THRESHOLD 0.92
+#define THRESHOLD 0.8
 #define MAX_COMBS 3
 
 using namespace std;
