@@ -115,12 +115,15 @@ float Lac::testing(string path) {
         }
 
         int n = lineFeatures.size();
+        if(MAX_COMBS > 0 && MAX_COMBS <  n) {
+            n = MAX_COMBS;
+        }
 
         vector<unordered_set<pair<int, int>, pairHash>> combinationsFeatures = {};
 
         // Acessando as linhas de cada tupla: 1 a 1, 2 a 2 e assim por diante ate o tamanho maximo da tupla
         bool shouldStop = false;
-        for (int q = 1; q <= MAX_COMBS; q++) {
+        for (int q = 1; q <= n; q++) {
             if (shouldStop)
                 break;
 
