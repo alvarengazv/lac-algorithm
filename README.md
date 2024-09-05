@@ -344,13 +344,13 @@ Para a implementação do algoritmo LAC, o projeto foi organizado em um diretór
   - [`base-avaliacao/poker-hand-testing.data`](datasets/base-avaliacao/poker-hand-testing-michel.data): arquivo contendo os dados utilizados para testar o algoritmo LAC, sendo a base de teste do PokerHand Data-Set modificada pelo professor [Michel][github-prof].
   - [`output.txt`](datasets/output.txt): arquivo de saída contendo os resultados da classificação das mãos de pôquer.
 
-  - [`images/`](images): diretório contendo as imagens utilizadas na documentação do projeto.
-    - [`tabelaFeatures.png`](images/tabelaFeatures.png): imagem ilustrando um exemplo de tabela invertida de features.
-    - [`tabelaClasses.png`](images/tabelaClasses.png): imagem ilustrando um exemplo de tabela invertida de classes.
-    - [`mapeamentoTeste.png`](images/mapeamentoTeste.png): imagem ilustrando um exemplo de mapeamento na fase de teste.
-    - [`cossenoComReducao.jpeg`](images/cossenoComReducao.jpeg): imagem ilustrando o cálculo de similaridade de cossenos com redução de dimensionalidade.
-    - [`cossenoSemReducao.jpeg`](images/cossenoSemReducao.jpeg): imagem ilustrando o cálculo de similaridade de cossenos sem redução de dimensionalidade.
-    - [`reducaoCardinalidade.jpeg`](images/reducaoCardinalidade.jpeg): imagem ilustrando a redução da cardinalidade das features.
+- [`images/`](images): diretório contendo as imagens utilizadas na documentação do projeto.
+  - [`tabelaFeatures.png`](images/tabelaFeatures.png): imagem ilustrando um exemplo de tabela invertida de features.
+  - [`tabelaClasses.png`](images/tabelaClasses.png): imagem ilustrando um exemplo de tabela invertida de classes.
+  - [`mapeamentoTeste.png`](images/mapeamentoTeste.png): imagem ilustrando um exemplo de mapeamento na fase de teste.
+  - [`cossenoComReducao.jpeg`](images/cossenoComReducao.jpeg): imagem ilustrando o cálculo de similaridade de cossenos com redução de dimensionalidade.
+  - [`cossenoSemReducao.jpeg`](images/cossenoSemReducao.jpeg): imagem ilustrando o cálculo de similaridade de cossenos sem redução de dimensionalidade.
+  - [`reducaoCardinalidade.jpeg`](images/reducaoCardinalidade.jpeg): imagem ilustrando a redução da cardinalidade das features.
 
 - [`src/`](src): diretório contendo os arquivos de código-fonte do projeto.
   - [`main.cpp`](src/main.cpp): arquivo contendo a função principal do programa, responsável por realizar a classificação das mãos de pôquer.
