@@ -1,6 +1,7 @@
 #include "lac.hpp"
 
-int Lac::INTERSECTION_LIMIT = 0;
+int Lac::INTERSECTION_LIMIT;
+float Lac::THRESHOLD;
 unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> Lac::similarityCache;
 pthread_mutex_t Lac::mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -8,6 +9,14 @@ pthread_mutex_t Lac::mutex = PTHREAD_MUTEX_INITIALIZER;
 Lac::Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes) {
     this->features = features;
     this->classes = classes;
+}
+
+void Lac::setIntersectionLimit(int intersectionLimit) {
+    INTERSECTION_LIMIT = intersectionLimit;
+}
+
+void Lac::setThreshold(float threshold) {
+    THRESHOLD = threshold;
 }
 
 // Treinamento do algoritmo
@@ -40,8 +49,6 @@ void Lac::training(string path) {
                 }
             }
         } else {
-            INTERSECTION_LIMIT = 10;
-
             for (int i = 0; i < values.size() - 1; i++) {
                 pair<int, int> feature((i + 1), values[i]);
 

@@ -17,7 +17,7 @@
 #define MIN_SUPORTE 0
 #define DECREASE_CARDINALITY 1
 #define USE_COSINE_SIMILARITY 1
-#define THRESHOLD 0.8
+// #define THRESHOLD 0.8
 #define MAX_COMBS 3
 
 using namespace std;
@@ -79,6 +79,8 @@ class Lac {
    private:
     unordered_map<pair<int, int>, unordered_set<int>, pairHash> features;
     unordered_map<int, unordered_set<int>> classes;
+    static int INTERSECTION_LIMIT;
+    static float THRESHOLD;
 
    public:
     Lac(unordered_map<pair<int, int>, unordered_set<int>, pairHash> features, unordered_map<int, unordered_set<int>> classes);
@@ -92,9 +94,11 @@ class Lac {
     static pair<vector<double>, double> checkSimilarity(cacheKey lineFeatures);
     static double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2);
     static void* threadIntersection(void* arg);
-    static int INTERSECTION_LIMIT;
+    // static int INTERSECTION_LIMIT;
     static unordered_map<cacheKey, cacheValue, vectorPairHash, vectorPairEqual> similarityCache;
     static pthread_mutex_t mutex;
+    void setIntersectionLimit(int intersectionLimit);
+    void setThreshold(float threshold);
 };
 
 #endif
