@@ -47,16 +47,18 @@ CEFET-MG Campus V <br>
         <li><a href='#%EF%B8%8F%EF%B8%8F-otimizações-propostas'>Otimizações Propostas</a></li>
         <ul>
           <li><a href='#quando-realizar-interseções'>Quando Realizar Interseções</a></li>
+          <li><a href='#irrelevância-para-classificação'>Irrelevância Para Classificação</a></li>
+          <li><a href='#uso-do-unordered-set'>Uso do Unordered_set</a></li>
+          <li><a href='#diminuição-de-cardinalidade'>Diminuição de Cardinalidade</a></li>
           <li><a href='#cache-de-interseções'>Cache de Interseções</a></li>
+          <li><a href='#grid-search-para-hiperparâmetros'>Grid Search para Hiperparâmetros</a></li>
+          <li><a href='#multithreading'>Multithreading</a></li>
           <li><a href='#cache-de-similaridade'>Cache de Similaridade</a></li>
           <ul>
             <li><a href='#similaridade'>Similaridade</a></li>
             <li><a href='#threshold'>THRESHOLD</a></li>
+            <li><a href='#cache-de-features-com-similaridade'>Cache de Features Com Similaridade</a></li>
           </ul>
-          <li><a href='#irrelevância-para-classificação'>Irrelevância Para Classificação</a></li>
-          <li><a href='#grid-search-para-hiperparâmetros'>Grid Search para Hiperparâmetros</a></li>
-          <li><a href='#diminuição-de-cardinalidade'>Diminuição de Cardinalidade</a></li>
-          <li><a href='#multhreading'>Multithreading</a></li>
         </ul>
       </ul>
     </li>
@@ -828,7 +830,7 @@ $$
 
   O trabalho foi desenvolvido e testado em várias configurações de hardware. Podemos destacar algumas configurações de Sistema Operacional e Compilador, pois as demais configurações não influenciam diretamente no desempenho do programa.
 
-</dic>
+</div>
 
 <div align='center'>
 
@@ -837,8 +839,8 @@ $$
 ![Make][make-badge] 
 
 SO | Compilador 
---- | ---
-Ubuntu 24.04.4 LTS | g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+--- | --- 
+Ubuntu 24.04.4 LTS | g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0 
 
 </div>
 
