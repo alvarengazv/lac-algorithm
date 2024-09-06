@@ -383,31 +383,32 @@ $$
 
   De uma forma compacta e organizada, os arquivos e diretórios estão dispostos da seguinte forma:
 
-    ```.
-    |
-    ├── datasets
-    |   |   ├── base-avaliacao
-    │   │   │   ├── poker-hand-testing.data
-    │   │   |   └── poker-hand-training.data
-    │   │   ├── poker-hand-testing.data
-    │   │   ├── poker-hand-training.data
-    │   │   └── output.txt
-    ├── images
-    │   │   ├── tabelaFeatures.png
-    │   │   ├── tabelaClasses.png
-    │   │   ├── mapeamentoTeste.png
-    │   │   ├── cossenoComReducao.jpeg
-    │   │   ├── cossenoSemReducao.jpeg
-    │   │   └── reducaoCardinalidade.jpeg
-    ├── src
-    │   │   ├── main.cpp
-    │   │   ├── lac.cpp
-    │   │   └── lac.hpp
-    ├── .gitignore
-    ├── make.sh
-    ├── makefile
-    └── README.md
-    ```
+  ```.
+  |
+  ├── datasets
+  |   |   ├── base-avaliacao
+  │   │   │   ├── poker-hand-testing.data
+  │   │   |   └── poker-hand-training.data
+  │   │   ├── poker-hand-testing.data
+  │   │   ├── poker-hand-training.data
+  │   │   └── output.txt
+  ├── images
+  │   │   ├── tabelaFeatures.png
+  │   │   ├── tabelaClasses.png
+  │   │   ├── mapeamentoTeste.png
+  │   │   ├── cossenoComReducao.jpeg
+  │   │   ├── cossenoSemReducao.jpeg
+  │   │   └── reducaoCardinalidade.jpeg
+  ├── src
+  │   │   ├── main.cpp
+  │   │   ├── lac.cpp
+  │   │   └── lac.hpp
+  ├── .gitignore
+  ├── make.sh
+  ├── makefile
+  └── README.md
+  ```
+  
 </div>
 
 <p align="right">(<a href="#readme-topo">voltar ao topo</a>)</p>
