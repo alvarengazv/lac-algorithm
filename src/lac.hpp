@@ -22,14 +22,15 @@
 
 using namespace std;
 
-struct pairHashSimilarity {
-    template <class T1, class T2>
-    size_t operator()(const pair<T1, T2>& p) const {
-        auto hash1 = hash<T1>{}(p.first);
-        auto hash2 = hash<T2>{}(p.second);
-        return hash1 ^ hash2;
-    }
-};
+// Ficou sem usar
+// struct pairHashSimilarity {
+//     template <class T1, class T2>
+//     size_t operator()(const pair<T1, T2>& p) const {
+//         auto hash1 = hash<T1>{}(p.first);
+//         auto hash2 = hash<T2>{}(p.second);
+//         return hash1 ^ hash2;
+//     }
+// };
 
 template <typename T>
 void hashCombine(size_t& seed, T const& v) {
@@ -88,7 +89,6 @@ class Lac {
     int findMaxIndex(double* arr, int size);
     vector<int> splitString(string line);
     vector<unordered_set<pair<int, int>, pairHash>> combinations(const vector<pair<int, int>>& c, int k);
-    void populateCache(cacheKey lineFeatures, cacheValue classesSupport);
     static pair<vector<double>, double> checkSimilarity(cacheKey lineFeatures);
     static double cosineSimilarity(const vector<pair<int, int>>& set1, const vector<pair<int, int>>& set2);
     static void* threadIntersection(void* arg);

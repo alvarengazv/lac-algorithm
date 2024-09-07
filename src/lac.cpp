@@ -115,7 +115,7 @@ float Lac::testing(string path) {
         }
 
         int n = lineFeatures.size();
-        if(MAX_COMBS > 0 && MAX_COMBS <  n) {
+        if (MAX_COMBS > 0 && MAX_COMBS < n) {
             n = MAX_COMBS;
         }
 
@@ -260,11 +260,6 @@ vector<unordered_set<pair<int, int>, pairHash>> Lac::combinations(const vector<p
     }
 
     return result;
-}
-
-// Insere linha de features no cache
-void Lac::populateCache(cacheKey lineFeatures, cacheValue classesSupport) {
-    similarityCache.insert(pair<vector<pair<int, int>>, vector<double>>(lineFeatures, classesSupport));
 }
 
 // Encontra a linha de features mais similar no cache
